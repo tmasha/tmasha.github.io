@@ -4,6 +4,8 @@ import * as THREE from 'three';
 // general setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+camera.position.set(-7, 0, 10);
+
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector('#bg'),
 });
@@ -17,9 +19,6 @@ renderer.render( scene, camera );
 const pointLight = new THREE.PointLight(0xfffff);
 const ambientLight = new THREE.AmbientLight(0xffffff);
 scene.add(pointLight, ambientLight);
-
-const gridHelper = new THREE.GridHelper(200, 50);
-scene.add(gridHelper);
 
 // random stars background
 function addStar() {
@@ -48,19 +47,11 @@ const sun2 = new THREE.Mesh(sunGeom2, sunMat2);
 scene.add(sun2);
 
 
-
-sun1.position.set(7, 0, -10);
-sun2.position.set(7, 0, -10);
-
-pointLight.position.set(7, 0, -10);
-ambientLight.position.set(7, 0, -10);
-
-
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
-  camera.position.z = t * -0.01;
-  camera.position.x = t * -0.0002;
-  camera.rotation.y = t * 0.0002;
+  camera.position.x = (t * -0.0002) - 7;
+  camera.rotation.y = (t * 0.0002);
+  camera.position.z = (t * -0.01) + 10;
 
 }
 
