@@ -1,4 +1,4 @@
-import * as THREE from '/portfolio/node_modules/three/build/three.module.js';
+import * as THREE from '/.vite/deps/three.js';
 
 // general setup
 const scene = new THREE.Scene();
