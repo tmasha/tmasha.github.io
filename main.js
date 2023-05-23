@@ -47,6 +47,7 @@ const sun2 = new THREE.Mesh(sunGeom2, sunMat2);
 scene.add(sun2);
 
 
+
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
   camera.position.x = (t * -0.0002) - 7;
