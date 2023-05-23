@@ -1,5 +1,5 @@
-import './style.css'
-import * as THREE from '/node_modules/three/build/three.module';
+import '/style.css'
+import * as THREE from 'three';
 
 // general setup
 const scene = new THREE.Scene();
