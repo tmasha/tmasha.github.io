@@ -1,0 +1,13 @@
+{
+  "hash": "21e99f16",
+  "browserHash": "5767dc35",
+  "optimized": {
+    "three": {
+      "src": "../../portfolio/node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "f3ccf2ac",
+      "needsInterop": false
+    }
+  },
+  "chunks": {}
+}
