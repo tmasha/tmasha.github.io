@@ -1,5 +1,3 @@
-import * as THREE from '/.vite/deps/three.js';
-
 // general setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
