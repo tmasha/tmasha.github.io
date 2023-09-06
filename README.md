@@ -1,2 +1,2 @@
 # tmasha.github.io
-New repository
+Personal portfolio page
