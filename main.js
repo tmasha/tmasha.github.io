@@ -1,6 +1,8 @@
 import * as THREE from '/node_modules/three';
 
-// consts that can be used throughout
+// ---------------------
+// constants to use throughout
+// ---------------------
 const TWO_PI = Math.PI * 2;
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -8,17 +10,23 @@ const DEG_TO_RAD = Math.PI / 180;
 const INIT_X = 0;
 const INIT_Y = 0;
 const INIT_Z = 10;
+
 // scale factors
 const ORBIT_DISTANCE_SCALE = 0.7; // used to scale distances for orbits
 const STAR_COUNT = 300;
 const ROTATION_SCALE = 77; // used to scale day lengths for rotation
 const ORBIT_SCALE = 25000; // used to scale year lengths for orbits
-// reuse loaders/geometries/materials to reduce allocations
+
+// ---------------------
+// shared resources
+// ---------------------
 const textureLoader = new THREE.TextureLoader();
 const STAR_GEOM = new THREE.SphereGeometry(0.5, 24, 24);
 const STAR_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-// general setup
+// ---------------------
+// scene setup
+// ---------------------
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
@@ -31,32 +39,25 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.render(scene, camera);
 
-// lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+// ambient light, lights up everything equally 
+const ambientLight = new THREE.AmbientLight(0xffffff, 1); // color, intensity
 scene.add(ambientLight);
 
-/**
- * Add a star at a random position in the scene
- */
-function addStar() {
-	// reuse geometry and material for many stars to save memory
-	const star = new THREE.Mesh(STAR_GEOM, STAR_MAT);
-	const [x, y, z] = [
-		THREE.MathUtils.randFloatSpread(633),
-		THREE.MathUtils.randFloatSpread(633),
-		THREE.MathUtils.randFloatSpread(633),
-	];
-	star.position.set(x, y, z);
-	scene.add(star);
+// ---------------------
+// helper functions
+// ---------------------
+function randSpread() {
+	return THREE.MathUtils.randFloatSpread(633);
 }
 
-for (let i = 0; i < STAR_COUNT; i++) addStar();
-
+// ---------------------
+// factory functions
+// ---------------------
 /**
- * Create a ring for a celestial body
- * @param {string} bodyName - Body name as a lowercase string
- * @param {Object} ringRadii - The inner and outer ring radii in km
- * @returns {Object} The created ring mesh
+ * create a ring for a celestial body
+ * @param {string} bodyName - body name as a lowercase string
+ * @param {Object} ringRadii - the inner and outer ring radii in km
+ * @returns {Object} the created ring mesh
  */
 function createRing(bodyName, ringRadii) {
 	const ringGeom = new THREE.RingGeometry(
@@ -64,11 +65,11 @@ function createRing(bodyName, ringRadii) {
 		ringRadii.outerRadius
 	);
 
-	// Make a path name for the ring texture image file, then use the shared texture loader
+	// make a path name for the ring texture image file, then use the shared texture loader
 	const ringPath = `assets/maps/${bodyName}Ring.jpg`;
 	const ringTexture = textureLoader.load(ringPath);
 
-	// Use the ring geometry and ring material to make a ring mesh
+	// use the ring geometry and ring material to make a ring mesh
 	const ringMat = new THREE.MeshBasicMaterial({
 		map: ringTexture,
 		side: THREE.DoubleSide
@@ -77,9 +78,9 @@ function createRing(bodyName, ringRadii) {
 }
 
 /**
- * Create body orbit torus
- * @param {number} distance - Body distance from Sun in AU
- * @returns {Object} The created orbit mesh
+ * create body orbit torus
+ * @param {number} distance - body distance from Sun in AU
+ * @returns {Object} the created orbit mesh
  */
 function createOrbit(distance) {
 	// Create a representation for the body's orbit based on its distance
@@ -93,12 +94,12 @@ function createOrbit(distance) {
 }
 
 /**
- * Create a celestial body
- * @param {string} bodyName - Body name as a lowercase string
- * @param {number} bodyRadius - Body radius in km
- * @param {number} distance - Body distance from Sun in AU
- * @param {Object} ringRadii - The inner and outer ring radii in km
- * @returns {Object} The created celestial body
+ * create a celestial body
+ * @param {string} bodyName - body name as a lowercase string
+ * @param {number} bodyRadius - body radius in km
+ * @param {number} distance - body distance from Sun in AU
+ * @param {Object} ringRadii - the inner and outer ring radii in km
+ * @returns {Object} the created celestial body
  */
 function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
@@ -149,34 +150,38 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 	return { body, pivot, orbit }
 }
 
+// ---------------------
+// scene population
+// ---------------------
 /**
- * Advance the body's spin and orbital angle for animation (per-frame)
- * @param {Object} body - The celestial body object
- * @param {number} dayLength - Body day length in Earth days
- * @param {number} yearLength - Body year length in Earth days
+ * Add a star at a random position in the scene
  */
-function advanceRotationAndOrbit(body, dayLength, yearLength) {
-
-	// orbitalPeriod: orbital period in radians/seconds
-	// rotationPeriod: rotation period in radians/seconds
-	var orbitalPeriod = TWO_PI / (yearLength * 86400);
-	var rotationPeriod = TWO_PI / (dayLength * 86400);
-
-	// Scale it so it doesn't take a gorillion years for anything to happen lmfao
-	orbitalPeriod *= ORBIT_SCALE;
-	rotationPeriod *= ROTATION_SCALE;
-
-	// implement each accordingly (increment angles)
-	body.pivot.rotation.y += orbitalPeriod;
-	body.body.rotation.y += rotationPeriod;
-
+function addStar() {
+	// reuse geometry and material for many stars to save memory
+	const star = new THREE.Mesh(STAR_GEOM, STAR_MAT);
+	const [x, y, z] = [randSpread(), randSpread(), randSpread()];
+	star.position.set(x, y, z);
+	scene.add(star);
 }
 
+for (let i = 0; i < STAR_COUNT; i++) addStar();
+
+// main planets
+const mercury = createBody("mercury", 1, 25);
+const venus = createBody("venus", 3, 50);
+const earth = createBody("earth", 3, 75);
+const mars = createBody("mars", 1.5, 100);
+const jupiter = createBody("jupiter", 10, 200);
+const saturn = createBody("saturn", 9, 300, { innerRadius: 10, outerRadius: 20 });
+const uranus = createBody("uranus", 6, 400);
+const neptune = createBody("neptune", 6, 500);
+const pluto = createBody("pluto", 1, 550);
+
 /**
- * Apply axial tilt and orbital inclination to a body
- * @param {Object} body - The celestial body object
- * @param {number} tilt - The axial tilt in degrees
- * @param {number} inclination - The orbital inclination to the ecliptic in degrees
+ * apply axial tilt and orbital inclination to a body
+ * @param {Object} body - the celestial body object
+ * @param {number} tilt - the axial tilt in degrees
+ * @param {number} inclination - the orbital inclination to the ecliptic in degrees
  */
 function applyTiltAndInclination(body, tilt, inclination) {
 	// convert to radians using cached multiplier
@@ -191,39 +196,47 @@ function applyTiltAndInclination(body, tilt, inclination) {
 	if (body.ring) {
 		body.ring.rotation.x += tilt;
 	}
+}
+
+applyTiltAndInclination(mercury, 2.04, 7);
+applyTiltAndInclination(venus, 2.64, 3.39);
+applyTiltAndInclination(earth, 23.439, 0);
+applyTiltAndInclination(mars, 25.19, 1.85);
+applyTiltAndInclination(jupiter, 3.13, 1.3);
+applyTiltAndInclination(saturn, 26.73, 2.49);
+applyTiltAndInclination(uranus, 97.77, 0.77);
+applyTiltAndInclination(neptune, 28, 1.77);
+applyTiltAndInclination(pluto, 120, 17.2);
+
+// ---------------------
+// animation helpers (per-frame)
+// ---------------------
+/**
+ * advance the body's spin and orbital angle for animation (per-frame)
+ * @param {Object} body - the celestial body object
+ * @param {number} dayLength - body day length in Earth days
+ * @param {number} yearLength - body year length in Earth days
+ */
+function advanceRotationAndOrbit(body, dayLength, yearLength) {
+
+	// orbitalPeriod: orbital period in radians/seconds
+	// rotationPeriod: rotation period in radians/seconds
+	var orbitalPeriod = TWO_PI / (yearLength * 86400);
+	var rotationPeriod = TWO_PI / (dayLength * 86400);
+
+	// scale periods so they are observable in a reasonable time frame
+	orbitalPeriod *= ORBIT_SCALE;
+	rotationPeriod *= ROTATION_SCALE;
+
+	// implement angles accordingly
+	body.pivot.rotation.y += orbitalPeriod;
+	body.body.rotation.y += rotationPeriod;
 
 }
 
-// Main planets
-const mercury = createBody("mercury", 1, 25);
-applyTiltAndInclination(mercury, 2.04, 7);
-
-const venus = createBody("venus", 3, 50);
-applyTiltAndInclination(venus, 2.64, 3.39);
-
-const earth = createBody("earth", 3, 75);
-applyTiltAndInclination(earth, 23.439, 0);
-
-const mars = createBody("mars", 1.5, 100);
-applyTiltAndInclination(mars, 25.19, 1.85);
-
-const jupiter = createBody("jupiter", 10, 200);
-applyTiltAndInclination(jupiter, 3.13, 1.3);
-
-const saturn = createBody("saturn", 9, 300, { innerRadius: 10, outerRadius: 20 });
-applyTiltAndInclination(saturn, 26.73, 2.49);
-
-const uranus = createBody("uranus", 6, 400);
-applyTiltAndInclination(uranus, 97.77, 0.77);
-
-const neptune = createBody("neptune", 6, 500);
-applyTiltAndInclination(neptune, 28, 1.77);
-
-const pluto = createBody("pluto", 1, 550);
-applyTiltAndInclination(pluto, 120, 17.2);
-
-window.addEventListener('resize', onWindowResize);
-
+// ---------------------
+// event handlers
+// ---------------------
 /**
  * Handle window resize events
  */
@@ -234,10 +247,10 @@ function onWindowResize() {
 	camera.updateProjectionMatrix();
 }
 
-onWindowResize();
+window.addEventListener('resize', onWindowResize);
 
 /**
- * Move the camera based on scroll position
+ * move the camera based on scroll position
  */
 function moveCamera() {
 	const t = document.body.getBoundingClientRect().top;
@@ -249,12 +262,13 @@ function moveCamera() {
 
 document.body.onscroll = moveCamera;
 
-/**
- * Animate the scene
- */
+onWindowResize();
+
+// ---------------------
+// main animation loop
+// ---------------------
 function animate() {
 	requestAnimationFrame(animate);
-	// setPeriods(planet, dayLength, yearLength)
 
 	// Mercury
 	advanceRotationAndOrbit(mercury, 59, 120)
@@ -286,4 +300,4 @@ function animate() {
 	renderer.render(scene, camera);
 }
 
-animate()
+animate();
