@@ -83,7 +83,6 @@ function createRing(bodyName, ringRadii) {
  * @returns {Object} the created orbit mesh
  */
 function createOrbit(distance) {
-	// Create a representation for the body's orbit based on its distance
 	const orbitGeom = new THREE.TorusGeometry(distance * ORBIT_DISTANCE_SCALE, 0.1);
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
@@ -103,50 +102,50 @@ function createOrbit(distance) {
  */
 function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
-	// Create the body's geometry using the body's Radius
+	// create the body's geometry using the body's Radius
 	const bodyGeom = new THREE.SphereGeometry(bodyRadius);
 
-	// Create a path name for the body texture image file, then use the shared texture loader
+	// create a path name for the body texture image file, then use the shared texture loader
 	const bodyPath = `assets/maps/${bodyName}.jpg`;
 	const bodyTexture = textureLoader.load(bodyPath);
 
-	// Use the body texture and body material to make a body mesh
+	// use the body texture and body material to make a body mesh
 	const bodyMat = new THREE.MeshStandardMaterial({
 		map: bodyTexture,
 	});
 
-	// Create a planet
+	// create a planet
 	const body = new THREE.Mesh(bodyGeom, bodyMat);
 
-	// Create a pivot to control the planet's orbit around the Sun, then add the body to the pivot
+	// create a pivot to control the planet's orbit around the Sun, then add the body to the pivot
 	const pivot = new THREE.Object3D();
 	pivot.add(body);
 
-	// Add the pivot and set the body's distance from the Sun
+	// add the pivot and set the body's distance from the Sun
 	scene.add(pivot);
 	body.position.set(distance * ORBIT_DISTANCE_SCALE, 0, 0);
 
-	// Create a representation for the body's orbit based on its distance
+	// create a representation for the body's orbit based on its distance
 	const orbit = createOrbit(distance);
 	scene.add(orbit);
 	orbit.rotation.x += 0.5 * Math.PI;
 
-	// This if statement is run if the ring's inner and outer radii are passed in a list
+	// if block runs if ring radii are passed in
 	if (ringRadii) {
 
 		const ring = createRing(bodyName, ringRadii);
 
-		// Add the ring to the pivot and set its distance from the Sun
+		// add the ring to the pivot and set its distance from the Sun
 		pivot.add(ring);
 		ring.position.set(distance * ORBIT_DISTANCE_SCALE, 0, 0);
 		ring.rotation.x = -0.5 * Math.PI;
 
-		// Return body, ring, pivot so they can be accessed later
+		// return body, ring, pivot so they can be accessed later
 		return { body, ring, pivot, orbit }
 
 	}
 
-	// If ring is not rendered, just return a body and pivot
+	// if ring is not rendered, just return a body and pivot
 	return { body, pivot, orbit }
 }
 
@@ -238,7 +237,7 @@ function advanceRotationAndOrbit(body, dayLength, yearLength) {
 // event handlers
 // ---------------------
 /**
- * Handle window resize events
+ * handle window resize events
  */
 function onWindowResize() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
