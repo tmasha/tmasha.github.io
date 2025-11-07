@@ -1,7 +1,8 @@
 /**
-* celestial body data from https://en.wikipedia.org/wiki/List_of_gravitationally_rounded_objects_of_the_Solar_System
+ * celestial body data from https://en.wikipedia.org/wiki/List_of_gravitationally_rounded_objects_of_the_Solar_System
  * @param {string} id - unique id as a lowercase string
  * @param {string} name - display name
+ * @param {string} parent - parent body id, what it orbits
  * @param {number} meanDistKm - mean distance from Sun, km
  * @param {number} meanRadiusKm - body radius, km
  * @param {number} rotationDays - rotation period in Earth days, negative = retrograde
@@ -20,6 +21,7 @@ export const BODIES = [
     {
         id: 'sun',
         name: 'Sun',
+        parent: null,
         meanDistKm: 0,
         meanRadiusKm: 695508,
         rotationDays: 25.38,
@@ -37,6 +39,7 @@ export const BODIES = [
     {
         id: 'mercury',
         name: 'Mercury',
+        parent: 'sun',
         meanDistKm: 57909175,
         meanRadiusKm: 2440.53,
         rotationDays: 58.646225,
@@ -52,6 +55,7 @@ export const BODIES = [
     {
         id: 'venus',
         name: 'Venus',
+        parent: 'sun',
         meanDistKm: 108208930,
         meanRadiusKm: 6051.8,
         rotationDays: -243.0187,
@@ -67,6 +71,7 @@ export const BODIES = [
     {
         id: 'earth',
         name: 'Earth',
+        parent: 'sun',
         meanDistKm: 149597890,
         meanRadiusKm: 6378.1366,
         rotationDays: 0.99726968,
@@ -82,6 +87,7 @@ export const BODIES = [
     {
         id: 'mars',
         name: 'Mars',
+        parent: 'sun',
         meanDistKm: 227936640,
         meanRadiusKm: 3396.19,
         rotationDays: 1.02595675,
@@ -97,6 +103,7 @@ export const BODIES = [
     {
         id: 'jupiter',
         name: 'Jupiter',
+        parent: 'sun',
         meanDistKm: 778412010,
         meanRadiusKm: 71492,
         rotationDays: 0.41354,
@@ -112,6 +119,7 @@ export const BODIES = [
     {
         id: 'saturn',
         name: 'Saturn',
+        parent: 'sun',
         meanDistKm: 1426725400,
         meanRadiusKm: 60268,
         rotationDays: 0.44401,
@@ -127,6 +135,7 @@ export const BODIES = [
     {
         id: 'uranus',
         name: 'Uranus',
+        parent: 'sun',
         meanDistKm: 2870972200,
         meanRadiusKm: 25559,
         rotationDays: -0.71833,
@@ -142,6 +151,7 @@ export const BODIES = [
     {
         id: 'neptune',
         name: 'Neptune',
+        parent: 'sun',
         meanDistKm: 4498252900,
         meanRadiusKm: 24764,
         rotationDays: 0.67125,
@@ -159,6 +169,7 @@ export const BODIES = [
     {
         id: 'ceres',
         name: 'Ceres',
+        parent: 'sun',
         meanDistKm: 413700000,
         meanRadiusKm: 473,
         rotationDays: 0.3781,
@@ -174,6 +185,7 @@ export const BODIES = [
     {
         id: 'pluto',
         name: 'Pluto',
+        parent: 'sun',
         meanDistKm: 5906380000,
         meanRadiusKm: 1188.3,
         rotationDays: 6.3872,
@@ -189,6 +201,7 @@ export const BODIES = [
     {
         id: 'haumea',
         name: 'Haumea',
+        parent: 'sun',
         meanDistKm: 6484000000,
         meanRadiusKm: 816,
         rotationDays: 0.1631,
@@ -204,6 +217,7 @@ export const BODIES = [
     {
         id: 'makemake',
         name: 'Makemake',
+        parent: 'sun',
         meanDistKm: 6850000000,
         meanRadiusKm: 715,
         rotationDays: 0.9511,
@@ -219,6 +233,7 @@ export const BODIES = [
     {
         id: 'eris',
         name: 'Eris',
+        parent: 'sun',
         meanDistKm: 10210000000,
         meanRadiusKm: 1163,
         rotationDays: 15.7859,
