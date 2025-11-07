@@ -1,10 +1,16 @@
 import * as THREE from '/node_modules/three';
 
+// consts that can be used throughout
+// initial camera coordinates
+const initX = 0;
+const initY = 0;
+const initZ = 10;
+
 // general setup
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-camera.position.set(-7, 0, 10);
+camera.position.set(initX, initY, initZ);
 
 const renderer = new THREE.WebGLRenderer({
 	canvas: document.querySelector('#bg'),
@@ -210,10 +216,10 @@ onWindowResize();
 
 function moveCamera() {
 	const t = document.body.getBoundingClientRect().top;
-	camera.position.x = (t * 0.0004) - 7;
+	camera.position.x = initX + (t * 0.0004);
 	camera.rotation.x = (t * 0.0001);
-	camera.position.y = t * -0.02
-	camera.position.z = 10 + (t * -0.08)
+	camera.position.y = initY + (t * -0.02);
+	camera.position.z = initZ + (t * -0.08);
 }
 
 document.body.onscroll = moveCamera;
