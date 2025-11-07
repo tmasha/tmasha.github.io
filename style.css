@@ -28,7 +28,6 @@ main {
   font-style: normal;
 }
 
-
 main {
   width: 100vw;
   color: white;
@@ -37,12 +36,15 @@ main {
   width: 100%;
   margin: 0px auto;
   padding: 120px 0px;
-  
+
   display: grid;
   grid-template-columns: repeat(12, 1fr);
 }
 
-h1, h2, h3, blockquote {
+h1,
+h2,
+h3,
+blockquote {
   font-family: 'Raleway', sans-serif;
   font-weight: 700;
   font-style: normal;
@@ -54,104 +56,116 @@ canvas {
   left: 0;
 }
 
+header {
+  background: var(--dark-bg);
+  grid-column: 2 / span 5;
+  font-size: 2.5rem;
+  padding: 2rem;
+  margin-bottom: var(--spacing);
+}
+
+section {
+  grid-column: 2 / 8;
+  padding: 1rem;
+  background: var(--dark-bg);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  margin-bottom: var(--spacing);
+}
+
+blockquote {
+  margin: 0;
+  padding: 0;
+  grid-column: 2 / span 9;
+  margin-bottom: var(--spacing);
+}
+
+blockquote p {
+  color: black;
+  background-color: white;
+  font-size: 4rem;
+  display: inline;
+  line-height: 1;
+}
+
+.left {
+  grid-column: 6 / 12;
+}
+
+h1#typewriter {
+  overflow: hidden;
+  border-right: .15em solid rgb(0, 162, 255);
+  white-space: nowrap;
+  animation: typing 5s steps(18, end), blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-caret {
+
+  from,
+  to {
+    border-color: transparent;
+  }
+
+  50% {
+    border-color: rgb(0, 162, 255);
+  }
+}
+
+
+@media (max-width: 1570px) {
+  h1#typewriter {
+    overflow: visible;
+    border-right: none;
+    white-space: normal;
+    animation: none;
+  }
+}
+
+@media (max-width: 890px) {
+  main {
+    padding: 80px 0px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
   header {
-    background: var(--dark-bg);
-    grid-column: 2 / span 5;
-    font-size: 2.5rem;
-    padding: 2rem;
-    margin-bottom: var(--spacing);
+    font-size: 2rem;
+    padding: 1.5rem;
+    text-align: center;
   }
 
   section {
-    grid-column: 2 / 8;
-    padding: 1rem;
-    background: var(--dark-bg);
-    font-size: 1.25rem;
-    line-height: 1.5;
-    margin-bottom: var(--spacing);
+    font-size: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 200px;
+    text-align: center;
   }
 
   blockquote {
-    margin: 0;
-    padding: 0;
-    grid-column: 2 / span 9;
-    margin-bottom: var(--spacing);
+    margin-bottom: 200px;
+    text-align: center;
   }
 
   blockquote p {
-    color: black;
-    background-color: white;
-    font-size: 4rem;
-    display: inline;
-    line-height: 1;
+    font-size: 2.5rem;
+    text-align: center;
   }
 
   .left {
-    grid-column: 6 / 12;
+    grid-column: 2 / span 12;
+    text-align: center;
   }
 
-  h1#typewriter {
-    overflow: hidden;
-    border-right: .15em solid rgb(0, 162, 255);
-    white-space: nowrap;
-    animation: typing 5s steps(18, end), blink-caret .75s step-end infinite;
-  }
-
-  @keyframes typing {
-    from { width: 0; }
-    to { width: 100%; }
-  }
-
-  @keyframes blink-caret {
-    from, to { border-color: transparent; }
-    50% { border-color: rgb(0, 162, 255); }
-  }
-
-
-  @media (max-width: 1570px) {
-    h1#typewriter {
-      overflow: visible;
-      border-right: none;
-      white-space: normal;
-      animation: none;
-    }
-  }
-
-  @media (max-width: 890px) {
-    main {
-      padding: 80px 0px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;  
-    }
-  
-    header {
-      font-size: 2rem; 
-      padding: 1.5rem; 
-      text-align: center;
-    }
-  
-    section {
-      font-size: 1rem; 
-      padding: 0.75rem; 
-      margin-bottom: 200px; 
-      text-align: center;
-    }
-  
-    blockquote {
-      margin-bottom: 200px; 
-      text-align: center;
-    }
-  
-    blockquote p {
-      font-size: 2.5rem; 
-      text-align: center;
-    }
-  
-    .left {
-      grid-column: 2 / span 12; 
-      text-align: center;
-    }
-
-  }
+}

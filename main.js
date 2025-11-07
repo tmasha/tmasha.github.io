@@ -3,34 +3,30 @@ import * as THREE from '/node_modules/three';
 // general setup
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
 camera.position.set(-7, 0, 10);
 
 const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector('#bg'),
+	canvas: document.querySelector('#bg'),
 });
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.render( scene, camera );
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.render(scene, camera);
 
 // lights
-const ambientLight = new THREE.AmbientLight( 0xffffff, 0.8 );
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
-
-
-
-
 
 
 // random stars background
 function addStar() {
-  const starGeom = new THREE.SphereGeometry(0.5, 24, 24);
-  const starMat = new THREE.MeshBasicMaterial( { color: 0xffffff });
-  const star = new THREE.Mesh(starGeom, starMat);
+	const starGeom = new THREE.SphereGeometry(0.5, 24, 24);
+	const starMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+	const star = new THREE.Mesh(starGeom, starMat);
 
-  const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(633));
-  star.position.set(x, y, z);
-  scene.add(star);
+	const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(633));
+	star.position.set(x, y, z);
+	scene.add(star);
 }
 
 Array(300).fill().forEach(addStar);
@@ -64,10 +60,10 @@ scene.add(meMesh);
 
 function createRing(bodyName, ringRadii) {
 	const ringGeom = new THREE.RingGeometry(
-		ringRadii.innerRadius, 
+		ringRadii.innerRadius,
 		ringRadii.outerRadius
 	);
-	
+
 	// Make a path name for the ring texture image file, then use that to make a ring texture
 	const ringPath = "assets/maps/" + bodyName + "Ring.png";
 	const ringTexture = new THREE.TextureLoader().load(ringPath);
@@ -106,7 +102,7 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 	const bodyMat = new THREE.MeshStandardMaterial({
 		map: bodyTexture,
 	});
-	
+
 	// Create a planet
 	const body = new THREE.Mesh(bodyGeom, bodyMat);
 
@@ -125,7 +121,7 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
 	// This if statement is run if the ring's inner and outer radii are passed in a list
 	if (ringRadii) {
-		
+
 		const ring = createRing(bodyName, ringRadii);
 
 		// Add the ring to the pivot and set its distance from the Sun
@@ -134,12 +130,12 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 		ring.rotation.x = -0.5 * Math.PI;
 
 		// Return body, ring, pivot so they can be accessed later
-		return {body, ring, pivot, orbit}
+		return { body, ring, pivot, orbit }
 
 	}
 
 	// If ring is not rendered, just return a body and pivot
-	return {body, pivot, orbit}
+	return { body, pivot, orbit }
 }
 
 // set the orbital period and rotation period
@@ -148,7 +144,7 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 // yearLength: the year length in Earth days (i.e. 365)
 // dayLength: the day length in Earth days (i.e. 1)
 function setPeriods(body, dayLength, yearLength) {
-	
+
 	// orbitalPeriod: orbital period in radians/seconds
 	// rotationPeriod: rotation period in radians/seconds
 	var orbitalPeriod = (Math.PI * 2) / (yearLength * 86400);
@@ -156,7 +152,7 @@ function setPeriods(body, dayLength, yearLength) {
 
 	// Scale it so it doesn't take a gorillion years for anything to happen lmfao
 	const rscale = 77;
-  const oscale = 25000;
+	const oscale = 25000;
 	orbitalPeriod *= oscale;
 	rotationPeriod *= rscale;
 
@@ -181,12 +177,12 @@ function setTilts(body, tilt, inclination) {
 	body.pivot.rotation.x += inclination;
 	body.orbit.rotation.x += inclination;
 
-  if (body.ring) {
-		
+	if (body.ring) {
+
 		body.ring.rotation.x += tilt;
 
 	}
-  
+
 }
 
 // Main planets
@@ -205,7 +201,7 @@ setTilts(mars, 25.19, 1.85);
 const jupiter = createBody("jupiter", 10, 200);
 setTilts(jupiter, 3.13, 1.3);
 
-const saturn = createBody("saturn", 9, 300, {innerRadius: 10, outerRadius: 20});
+const saturn = createBody("saturn", 9, 300, { innerRadius: 10, outerRadius: 20 });
 setTilts(saturn, 26.73, 2.49);
 
 const uranus = createBody("uranus", 6, 400);
@@ -226,10 +222,10 @@ setTilts(pluto, 120, 17.2);
 window.addEventListener('resize', onWindowResize);
 
 function onWindowResize() {
-  renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setSize(window.innerWidth, window.innerHeight);
 
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
 }
 
 onWindowResize();
@@ -237,11 +233,11 @@ onWindowResize();
 // camera motion
 
 function moveCamera() {
-  const t = document.body.getBoundingClientRect().top;
-  camera.position.x = (t * 0.0004) - 7;
-  camera.rotation.x = (t * 0.0001);
-  camera.position.y = t * -0.02
-  camera.position.z = 10 + (t * -0.08)
+	const t = document.body.getBoundingClientRect().top;
+	camera.position.x = (t * 0.0004) - 7;
+	camera.rotation.x = (t * 0.0001);
+	camera.position.y = t * -0.02
+	camera.position.z = 10 + (t * -0.08)
 }
 
 document.body.onscroll = moveCamera;
@@ -249,14 +245,14 @@ document.body.onscroll = moveCamera;
 // animate
 
 function animate() {
-  requestAnimationFrame( animate );
+	requestAnimationFrame(animate);
 
-  meMesh.rotation.x += 0.001;
-  meMesh.rotation.z -= 0.005;
-  meMesh.rotation.y += 0.0025;
-  
+	meMesh.rotation.x += 0.001;
+	meMesh.rotation.z -= 0.005;
+	meMesh.rotation.y += 0.0025;
 
-  // setPeriods(planet, dayLength, yearLength)
+
+	// setPeriods(planet, dayLength, yearLength)
 
 	// Mercury
 	setPeriods(mercury, 59, 120)
@@ -286,7 +282,7 @@ function animate() {
 
 
 
-  renderer.render(scene, camera);
+	renderer.render(scene, camera);
 }
 
 animate()
