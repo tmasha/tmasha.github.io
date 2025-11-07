@@ -92,42 +92,23 @@ blockquote p {
   grid-column: 6 / 12;
 }
 
-h1#typewriter {
-  overflow: hidden;
-  border-right: .15em solid rgb(0, 162, 255);
-  white-space: nowrap;
-  animation: typing 5s steps(18, end), blink-caret .75s step-end infinite;
+header h1 {
+  margin: 0 0 0.25rem 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
 }
 
-@keyframes typing {
-  from {
-    width: 0;
-  }
-
-  to {
-    width: 100%;
-  }
+header #subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #ddd;
 }
-
-@keyframes blink-caret {
-
-  from,
-  to {
-    border-color: transparent;
-  }
-
-  50% {
-    border-color: rgb(0, 162, 255);
-  }
-}
-
 
 @media (max-width: 1570px) {
-  h1#typewriter {
+  header h1 {
     overflow: visible;
-    border-right: none;
-    white-space: normal;
-    animation: none;
+    font-size: 2rem;
   }
 }
 

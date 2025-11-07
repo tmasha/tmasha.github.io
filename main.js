@@ -17,7 +17,6 @@ renderer.render(scene, camera);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-
 // random stars background
 function addStar() {
 	const starGeom = new THREE.SphereGeometry(0.5, 24, 24);
@@ -30,25 +29,6 @@ function addStar() {
 }
 
 Array(300).fill().forEach(addStar);
-
-
-const meGeom = new THREE.BoxGeometry(5, 5, 5);
-
-const textureLoader = new THREE.TextureLoader();
-const meTexture = textureLoader.load('/assets/me.jpg');
-
-const meMat = new THREE.MeshStandardMaterial({ map: meTexture });
-
-const meMesh = new THREE.Mesh(meGeom, meMat);
-
-scene.add(meMesh);
-
-
-
-
-
-
-
 
 // solar system graphics
 // This function creates a celestial body
@@ -65,7 +45,7 @@ function createRing(bodyName, ringRadii) {
 	);
 
 	// Make a path name for the ring texture image file, then use that to make a ring texture
-	const ringPath = "assets/maps/" + bodyName + "Ring.png";
+	const ringPath = "assets/maps/" + bodyName + "Ring.jpg";
 	const ringTexture = new THREE.TextureLoader().load(ringPath);
 
 	// Use the ring geometry and ring material to make a ring mesh
@@ -95,7 +75,7 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 	const bodyGeom = new THREE.SphereGeometry(bodyRadius);
 
 	// Create a path name for the body texture image file, then use that to make a body texture
-	const bodyPath = "assets/maps/" + bodyName + ".png";
+	const bodyPath = "assets/maps/" + bodyName + ".jpg";
 	const bodyTexture = new THREE.TextureLoader().load(bodyPath);
 
 	// Use the body texture and body material to make a body mesh
@@ -213,10 +193,6 @@ setTilts(neptune, 28, 1.77);
 const pluto = createBody("pluto", 1, 550);
 setTilts(pluto, 120, 17.2);
 
-
-
-
-
 // resize
 
 window.addEventListener('resize', onWindowResize);
@@ -246,12 +222,6 @@ document.body.onscroll = moveCamera;
 
 function animate() {
 	requestAnimationFrame(animate);
-
-	meMesh.rotation.x += 0.001;
-	meMesh.rotation.z -= 0.005;
-	meMesh.rotation.y += 0.0025;
-
-
 	// setPeriods(planet, dayLength, yearLength)
 
 	// Mercury
