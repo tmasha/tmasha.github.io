@@ -1,16 +1,28 @@
 import * as THREE from '/node_modules/three';
 
 // consts that can be used throughout
+const TWO_PI = Math.PI * 2;
+const DEG_TO_RAD = Math.PI / 180;
+
 // initial camera coordinates
-const initX = 0;
-const initY = 0;
-const initZ = 10;
+const INIT_X = 0;
+const INIT_Y = 0;
+const INIT_Z = 10;
+// scale factors
+const ORBIT_DISTANCE_SCALE = 0.7; // used to scale distances for orbits
+const STAR_COUNT = 300;
+const ROTATION_SCALE = 77; // used to scale day lengths for rotation
+const ORBIT_SCALE = 25000; // used to scale year lengths for orbits
+// reuse loaders/geometries/materials to reduce allocations
+const textureLoader = new THREE.TextureLoader();
+const STAR_GEOM = new THREE.SphereGeometry(0.5, 24, 24);
+const STAR_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
 // general setup
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-camera.position.set(initX, initY, initZ);
+camera.position.set(INIT_X, INIT_Y, INIT_Z);
 
 const renderer = new THREE.WebGLRenderer({
 	canvas: document.querySelector('#bg'),
@@ -27,16 +39,18 @@ scene.add(ambientLight);
  * Add a star at a random position in the scene
  */
 function addStar() {
-	const starGeom = new THREE.SphereGeometry(0.5, 24, 24);
-	const starMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-	const star = new THREE.Mesh(starGeom, starMat);
-
-	const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(633));
+	// reuse geometry and material for many stars to save memory
+	const star = new THREE.Mesh(STAR_GEOM, STAR_MAT);
+	const [x, y, z] = [
+		THREE.MathUtils.randFloatSpread(633),
+		THREE.MathUtils.randFloatSpread(633),
+		THREE.MathUtils.randFloatSpread(633),
+	];
 	star.position.set(x, y, z);
 	scene.add(star);
 }
 
-Array(300).fill().forEach(addStar);
+for (let i = 0; i < STAR_COUNT; i++) addStar();
 
 /**
  * Create a ring for a celestial body
@@ -50,9 +64,9 @@ function createRing(bodyName, ringRadii) {
 		ringRadii.outerRadius
 	);
 
-	// Make a path name for the ring texture image file, then use that to make a ring texture
-	const ringPath = "assets/maps/" + bodyName + "Ring.jpg";
-	const ringTexture = new THREE.TextureLoader().load(ringPath);
+	// Make a path name for the ring texture image file, then use the shared texture loader
+	const ringPath = `assets/maps/${bodyName}Ring.jpg`;
+	const ringTexture = textureLoader.load(ringPath);
 
 	// Use the ring geometry and ring material to make a ring mesh
 	const ringMat = new THREE.MeshBasicMaterial({
@@ -69,7 +83,7 @@ function createRing(bodyName, ringRadii) {
  */
 function createOrbit(distance) {
 	// Create a representation for the body's orbit based on its distance
-	const orbitGeom = new THREE.TorusGeometry(distance * 0.7, 0.1);
+	const orbitGeom = new THREE.TorusGeometry(distance * ORBIT_DISTANCE_SCALE, 0.1);
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
 		transparent: true,
@@ -91,9 +105,9 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 	// Create the body's geometry using the body's Radius
 	const bodyGeom = new THREE.SphereGeometry(bodyRadius);
 
-	// Create a path name for the body texture image file, then use that to make a body texture
-	const bodyPath = "assets/maps/" + bodyName + ".jpg";
-	const bodyTexture = new THREE.TextureLoader().load(bodyPath);
+	// Create a path name for the body texture image file, then use the shared texture loader
+	const bodyPath = `assets/maps/${bodyName}.jpg`;
+	const bodyTexture = textureLoader.load(bodyPath);
 
 	// Use the body texture and body material to make a body mesh
 	const bodyMat = new THREE.MeshStandardMaterial({
@@ -109,7 +123,7 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
 	// Add the pivot and set the body's distance from the Sun
 	scene.add(pivot);
-	body.position.set(distance * 0.7, 0, 0);
+	body.position.set(distance * ORBIT_DISTANCE_SCALE, 0, 0);
 
 	// Create a representation for the body's orbit based on its distance
 	const orbit = createOrbit(distance);
@@ -123,7 +137,7 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
 		// Add the ring to the pivot and set its distance from the Sun
 		pivot.add(ring);
-		ring.position.set(distance * 0.7, 0, 0);
+		ring.position.set(distance * ORBIT_DISTANCE_SCALE, 0, 0);
 		ring.rotation.x = -0.5 * Math.PI;
 
 		// Return body, ring, pivot so they can be accessed later
@@ -145,16 +159,14 @@ function advanceRotationAndOrbit(body, dayLength, yearLength) {
 
 	// orbitalPeriod: orbital period in radians/seconds
 	// rotationPeriod: rotation period in radians/seconds
-	var orbitalPeriod = (Math.PI * 2) / (yearLength * 86400);
-	var rotationPeriod = (Math.PI * 2) / (dayLength * 86400);
+	var orbitalPeriod = TWO_PI / (yearLength * 86400);
+	var rotationPeriod = TWO_PI / (dayLength * 86400);
 
 	// Scale it so it doesn't take a gorillion years for anything to happen lmfao
-	const rscale = 77;
-	const oscale = 25000;
-	orbitalPeriod *= oscale;
-	rotationPeriod *= rscale;
+	orbitalPeriod *= ORBIT_SCALE;
+	rotationPeriod *= ROTATION_SCALE;
 
-	// implement each accordingly
+	// implement each accordingly (increment angles)
 	body.pivot.rotation.y += orbitalPeriod;
 	body.body.rotation.y += rotationPeriod;
 
@@ -167,11 +179,11 @@ function advanceRotationAndOrbit(body, dayLength, yearLength) {
  * @param {number} inclination - The orbital inclination to the ecliptic in degrees
  */
 function applyTiltAndInclination(body, tilt, inclination) {
-	// convert to radians
-	tilt *= Math.PI / 180;
-	inclination *= Math.PI / 180;
+	// convert to radians using cached multiplier
+	tilt *= DEG_TO_RAD;
+	inclination *= DEG_TO_RAD;
 
-	// set each accordingly
+	// set each accordingly (increment angles)
 	body.body.rotation.x += tilt;
 	body.pivot.rotation.x += inclination;
 	body.orbit.rotation.x += inclination;
@@ -229,10 +241,10 @@ onWindowResize();
  */
 function moveCamera() {
 	const t = document.body.getBoundingClientRect().top;
-	camera.position.x = initX + (t * 0.0004);
+	camera.position.x = INIT_X + (t * 0.0004);
 	camera.rotation.x = (t * 0.0001);
-	camera.position.y = initY + (t * -0.02);
-	camera.position.z = initZ + (t * -0.08);
+	camera.position.y = INIT_Y + (t * -0.02);
+	camera.position.z = INIT_Z + (t * -0.08);
 }
 
 document.body.onscroll = moveCamera;
