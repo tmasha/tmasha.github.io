@@ -1,5 +1,5 @@
 /**
-* celestial body data
+* celestial body data from https://en.wikipedia.org/wiki/List_of_gravitationally_rounded_objects_of_the_Solar_System
  * @param {string} id - unique id as a lowercase string
  * @param {string} name - display name
  * @param {number} meanDistKm - mean distance from Sun, km
