@@ -14,6 +14,12 @@ const INIT_X = 0;
 const INIT_Y = 0;
 const INIT_Z = 10;
 
+// camera end positions for scroll
+const END_X = 0;
+const END_Y = 300;
+const END_Z = 1500;
+const END_ROTATION_X = -0.35;
+
 // scale factors
 const ROTATION_SCALE = 77; // used to scale rotation period
 const ORBIT_SCALE = 25000; // used to scale orbital period
@@ -42,7 +48,9 @@ const STAR_COUNT = 300; // number of random stars generated
 // ---------------------
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+// ensure the camera far plane covers the outermost bodies
+const maxScaledDist = Math.max(...BODIES.map(b => b.distKm * DISTANCE_SCALE));
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, Math.max(1000, maxScaledDist * 2));
 camera.position.set(INIT_X, INIT_Y, INIT_Z);
 
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg'), antialias: true });
@@ -101,7 +109,7 @@ composer.addPass(bloomPass);
 // helper functions
 // ---------------------
 function randSpread() {
-	return THREE.MathUtils.randFloatSpread(633);
+	return THREE.MathUtils.randFloatSpread(2000);
 }
 
 // ---------------------
@@ -302,10 +310,16 @@ window.addEventListener('resize', onWindowResize);
  */
 function moveCamera() {
 	const t = document.body.getBoundingClientRect().top;
-	camera.position.x = INIT_X + (t * 0.0004);
-	camera.rotation.x = (t * 0.0001);
-	camera.position.y = INIT_Y + (t * -0.02);
-	camera.position.z = INIT_Z + (t * -0.08);
+	// map scroll (t is negative when scrolling down) to a 0..1 progress over ~2000px
+	const progress = Math.min(1, Math.max(0, -t / 2000));
+
+	// linear interpolation
+	const interpolate = (a, b, p) => a + (b - a) * p;
+
+	camera.position.x = interpolate(INIT_X, END_X, progress);
+	camera.position.y = interpolate(INIT_Y, END_Y, progress);
+	camera.position.z = interpolate(INIT_Z, END_Z, progress);
+	camera.rotation.x = interpolate(0, END_ROTATION_X, progress);
 }
 
 document.body.onscroll = moveCamera;
