@@ -229,6 +229,11 @@ for (const b of BODIES) {
 
 	// apply axial tilt and inclination immediately
 	applyTiltAndInclination(created, b.axialTiltDeg, b.inclinationDeg);
+
+	// randomize initial planet rotational and orbital positions
+	const randomPhase = Math.random() * TWO_PI;
+	created.pivot.rotation.y = randomPhase;
+	created.body.rotation.y += Math.random() * TWO_PI;
 }
 
 /**
