@@ -7,7 +7,6 @@ import { BODIES } from './data/bodies.js';
 const TWO_PI = Math.PI * 2;
 const DEG_TO_RAD = Math.PI / 180;
 
-// initial camera coordinates
 const INIT_X = 0;
 const INIT_Y = 0;
 const INIT_Z = 10;
@@ -42,8 +41,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.render(scene, camera);
 
-// ambient light, lights up everything equally 
-const ambientLight = new THREE.AmbientLight(0xffffff, 1); // color, intensity
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
 // ---------------------
@@ -103,30 +101,15 @@ function createOrbit(distance) {
  */
 function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
-	// create the body's geometry using the body's Radius
 	const bodyGeom = new THREE.SphereGeometry(bodyRadius);
-
-	// create a path name for the body texture image file, then use the shared texture loader
 	const bodyPath = `assets/maps/${bodyName}.jpg`;
 	const bodyTexture = textureLoader.load(bodyPath);
-
-	// use the body texture and body material to make a body mesh
-	const bodyMat = new THREE.MeshStandardMaterial({
-		map: bodyTexture,
-	});
-
-	// create a planet
+	const bodyMat = new THREE.MeshStandardMaterial({ map: bodyTexture });
 	const body = new THREE.Mesh(bodyGeom, bodyMat);
-
-	// create a pivot to control the planet's orbit around the Sun, then add the body to the pivot
 	const pivot = new THREE.Object3D();
 	pivot.add(body);
-
-	// add the pivot and set the body's distance from the Sun
 	scene.add(pivot);
 	body.position.set(distance, 0, 0);
-
-	// create a representation for the body's orbit based on its distance
 	const orbit = createOrbit(distance);
 	scene.add(orbit);
 	orbit.rotation.x += 0.5 * Math.PI;
@@ -171,7 +154,6 @@ for (const b of BODIES) {
 	if (b.id === 'sun') scaledRadius *= 0.05;
 	const scaledDist = b.distKm * DISTANCE_SCALE;
 
-	// prepare ring radii if present
 	const ringParam = {
 		innerRadius: b.ringInnerKm * RADIUS_SCALE,
 		outerRadius: b.ringOuterKm * RADIUS_SCALE,
@@ -191,15 +173,11 @@ for (const b of BODIES) {
  * @param {number} inclination - the orbital inclination to the ecliptic in degrees
  */
 function applyTiltAndInclination(body, tilt, inclination) {
-	// convert to radians using cached multiplier
 	tilt *= DEG_TO_RAD;
 	inclination *= DEG_TO_RAD;
-
-	// set each accordingly (increment angles)
 	body.body.rotation.x += tilt;
 	body.pivot.rotation.x += inclination;
 	body.orbit.rotation.x += inclination;
-
 	if (body.ring) {
 		body.ring.rotation.x += tilt;
 	}
