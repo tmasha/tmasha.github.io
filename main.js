@@ -16,8 +16,8 @@ const INIT_Z = 10;
 const ROTATION_SCALE = 77; // used to scale rotation period
 const ORBIT_SCALE = 25000; // used to scale orbital period
 
-const RADIUS_SCALE = 5e-5; // used to scale body radii
-const DISTANCE_SCALE = 5e-7; // used to scale orbital distances
+const RADIUS_SCALE = 1e-4; // used to scale body radii
+const DISTANCE_SCALE = 1e-7; // used to scale orbital distances
 
 // ---------------------
 // SHARED RESOURCES
@@ -166,7 +166,9 @@ for (let i = 0; i < STAR_COUNT; i++) addStar();
 const bodyObjects = new Map(); // id -> { body, pivot, ring?, orbit }
 
 for (const b of BODIES) {
-	const scaledRadius = b.radiusKm * RADIUS_SCALE;
+	// temporarily shrinking the sun
+	let scaledRadius = b.radiusKm * RADIUS_SCALE;
+	if (b.id === 'sun') scaledRadius *= 0.05;
 	const scaledDist = b.distKm * DISTANCE_SCALE;
 
 	// prepare ring radii if present
