@@ -1,7 +1,8 @@
 import * as THREE from '/node_modules/three';
+import { BODIES } from './data/bodies.js';
 
 // ---------------------
-// constants to use throughout
+// CONSTANTS TO USE THROUGHOUT
 // ---------------------
 const TWO_PI = Math.PI * 2;
 const DEG_TO_RAD = Math.PI / 180;
@@ -12,17 +13,19 @@ const INIT_Y = 0;
 const INIT_Z = 10;
 
 // scale factors
-const ORBIT_DISTANCE_SCALE = 0.7; // used to scale distances for orbits
-const STAR_COUNT = 300;
-const ROTATION_SCALE = 77; // used to scale day lengths for rotation
-const ORBIT_SCALE = 25000; // used to scale year lengths for orbits
+const ROTATION_SCALE = 77; // used to scale rotation period
+const ORBIT_SCALE = 25000; // used to scale orbital period
+
+const RADIUS_SCALE = 5e-5; // used to scale body radii
+const DISTANCE_SCALE = 5e-7; // used to scale orbital distances
 
 // ---------------------
-// shared resources
+// SHARED RESOURCES
 // ---------------------
 const textureLoader = new THREE.TextureLoader();
 const STAR_GEOM = new THREE.SphereGeometry(0.5, 24, 24);
 const STAR_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const STAR_COUNT = 300; // number of random stars generated
 
 // ---------------------
 // scene setup
@@ -65,11 +68,9 @@ function createRing(bodyName, ringRadii) {
 		ringRadii.outerRadius
 	);
 
-	// make a path name for the ring texture image file, then use the shared texture loader
 	const ringPath = `assets/maps/${bodyName}Ring.jpg`;
 	const ringTexture = textureLoader.load(ringPath);
 
-	// use the ring geometry and ring material to make a ring mesh
 	const ringMat = new THREE.MeshBasicMaterial({
 		map: ringTexture,
 		side: THREE.DoubleSide
@@ -83,7 +84,7 @@ function createRing(bodyName, ringRadii) {
  * @returns {Object} the created orbit mesh
  */
 function createOrbit(distance) {
-	const orbitGeom = new THREE.TorusGeometry(distance * ORBIT_DISTANCE_SCALE, 0.1);
+	const orbitGeom = new THREE.TorusGeometry(distance, 0.1);
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
 		transparent: true,
@@ -123,30 +124,26 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
 	// add the pivot and set the body's distance from the Sun
 	scene.add(pivot);
-	body.position.set(distance * ORBIT_DISTANCE_SCALE, 0, 0);
+	body.position.set(distance, 0, 0);
 
 	// create a representation for the body's orbit based on its distance
 	const orbit = createOrbit(distance);
 	scene.add(orbit);
 	orbit.rotation.x += 0.5 * Math.PI;
 
-	// if block runs if ring radii are passed in
+	// create ring if it exists
 	if (ringRadii) {
-
 		const ring = createRing(bodyName, ringRadii);
 
-		// add the ring to the pivot and set its distance from the Sun
 		pivot.add(ring);
-		ring.position.set(distance * ORBIT_DISTANCE_SCALE, 0, 0);
+		ring.position.set(distance, 0, 0);
 		ring.rotation.x = -0.5 * Math.PI;
 
-		// return body, ring, pivot so they can be accessed later
-		return { body, ring, pivot, orbit }
-
+		return { body, ring, pivot, orbit };
 	}
 
-	// if ring is not rendered, just return a body and pivot
-	return { body, pivot, orbit }
+	// no ring for this body
+	return { body, pivot, orbit };
 }
 
 // ---------------------
@@ -165,16 +162,25 @@ function addStar() {
 
 for (let i = 0; i < STAR_COUNT; i++) addStar();
 
-// main planets
-const mercury = createBody("mercury", 1, 25);
-const venus = createBody("venus", 3, 50);
-const earth = createBody("earth", 3, 75);
-const mars = createBody("mars", 1.5, 100);
-const jupiter = createBody("jupiter", 10, 200);
-const saturn = createBody("saturn", 9, 300, { innerRadius: 10, outerRadius: 20 });
-const uranus = createBody("uranus", 6, 400);
-const neptune = createBody("neptune", 6, 500);
-const pluto = createBody("pluto", 1, 550);
+// create bodies from data file
+const bodyObjects = new Map(); // id -> { body, pivot, ring?, orbit }
+
+for (const b of BODIES) {
+	const scaledRadius = b.radiusKm * RADIUS_SCALE;
+	const scaledDist = b.distKm * DISTANCE_SCALE;
+
+	// prepare ring radii if present
+	const ringParam = {
+		innerRadius: b.ringInnerKm * RADIUS_SCALE,
+		outerRadius: b.ringOuterKm * RADIUS_SCALE,
+	};
+
+	const created = createBody(b.id, scaledRadius, scaledDist, ringParam);
+	bodyObjects.set(b.id, created);
+
+	// apply axial tilt and inclination immediately
+	applyTiltAndInclination(created, b.axialTiltDeg, b.inclinationDeg);
+}
 
 /**
  * apply axial tilt and orbital inclination to a body
@@ -197,15 +203,7 @@ function applyTiltAndInclination(body, tilt, inclination) {
 	}
 }
 
-applyTiltAndInclination(mercury, 2.04, 7);
-applyTiltAndInclination(venus, 2.64, 3.39);
-applyTiltAndInclination(earth, 23.439, 0);
-applyTiltAndInclination(mars, 25.19, 1.85);
-applyTiltAndInclination(jupiter, 3.13, 1.3);
-applyTiltAndInclination(saturn, 26.73, 2.49);
-applyTiltAndInclination(uranus, 97.77, 0.77);
-applyTiltAndInclination(neptune, 28, 1.77);
-applyTiltAndInclination(pluto, 120, 17.2);
+// (tilts applied above during creation from data)
 
 // ---------------------
 // animation helpers (per-frame)
@@ -269,32 +267,21 @@ onWindowResize();
 function animate() {
 	requestAnimationFrame(animate);
 
-	// Mercury
-	advanceRotationAndOrbit(mercury, 59, 120)
+	// advance rotation and orbit for all created bodies
+	for (const [id, obj] of bodyObjects.entries()) {
+		// find corresponding data entry
+		const data = BODIES.find(x => x.id === id);
+		if (!data) continue;
 
-	// Venus
-	advanceRotationAndOrbit(venus, -243, 224.7)
+	// rotation and orbital period are both in days
+	const dayLength = data.rotationDays;
+	const yearLength = data.orbitalDays;
 
-	// Earth
-	advanceRotationAndOrbit(earth, 1, 365.256);
+	// skip bodies without an orbital period (e.g., the Sun)
+	if (yearLength == null) continue;
 
-	// Mars
-	advanceRotationAndOrbit(mars, 1.02749125, 686.980);
-
-	// Jupiter
-	advanceRotationAndOrbit(jupiter, 0.42, 1200);
-
-	// Saturn
-	advanceRotationAndOrbit(saturn, 0.46, 1400);
-
-	// Uranus
-	advanceRotationAndOrbit(uranus, 0.71, 2000);
-
-	// Neptune
-	advanceRotationAndOrbit(neptune, 0.67, 4000);
-
-	// Pluto
-	advanceRotationAndOrbit(pluto, 6, 5000);
+	advanceRotationAndOrbit(obj, dayLength, yearLength);
+	}
 
 	renderer.render(scene, camera);
 }
