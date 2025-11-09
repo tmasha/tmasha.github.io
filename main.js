@@ -133,11 +133,15 @@ function createRing(bodyName, ringRadii) {
 	const ringPath = `assets/maps/${bodyName}Ring.jpg`;
 	const ringTexture = textureLoader.load(ringPath);
 
-	const ringMat = new THREE.MeshBasicMaterial({
+	const ringMat = new THREE.MeshStandardMaterial({
 		map: ringTexture,
-		side: THREE.DoubleSide
+		side: THREE.DoubleSide,
+		transparent: true
 	});
-	return new THREE.Mesh(ringGeom, ringMat);
+	const mesh = new THREE.Mesh(ringGeom, ringMat);
+	mesh.receiveShadow = true;
+	mesh.castShadow = false;
+	return mesh;
 }
 
 /**
@@ -190,14 +194,13 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 	scene.add(orbit);
 	orbit.rotation.x += 0.5 * Math.PI;
 
+	// attach ring to the planet mesh so it inherits the planet's spin
 	if (ringRadii) {
 		const ring = createRing(bodyName, ringRadii);
-
-		pivot.add(ring);
-		ring.position.set(distance, 0, 0);
+		// add ring as a child of the body so it rotates with the body's spin
+		body.add(ring);
+		ring.position.set(0, 0, 0);
 		ring.rotation.x = -0.5 * Math.PI;
-		ring.castShadow = false;
-		ring.receiveShadow = true;
 
 		return { body, ring, pivot, orbit };
 	}
@@ -230,10 +233,10 @@ for (const b of BODIES) {
 	if (b.id === 'sun') scaledRadius *= 0.02; // temporarily shrinking the sun more
 	const scaledDist = b.distKm * DISTANCE_SCALE;
 
-	const ringParam = {
+	const ringParam = (b.ringOuterKm > b.ringInnerKm) ? {
 		innerRadius: b.ringInnerKm * RADIUS_SCALE,
 		outerRadius: b.ringOuterKm * RADIUS_SCALE,
-	};
+	} : null;
 
 	const created = createBody(b.id, scaledRadius, scaledDist, ringParam);
 	bodyObjects.set(b.id, created);
@@ -259,9 +262,6 @@ function applyTiltAndInclination(body, tilt, inclination) {
 	body.body.rotation.x += tilt;
 	body.pivot.rotation.x += inclination;
 	body.orbit.rotation.x += inclination;
-	if (body.ring) {
-		body.ring.rotation.x += tilt;
-	}
 }
 
 // ---------------------
