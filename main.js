@@ -66,14 +66,17 @@ renderer.render(scene, camera);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
 scene.add(ambientLight);
 
-// sun light to cast shadows
-const sunLight = new THREE.PointLight(0xffffff, SUN_BASE_INTENSITY, 0, 2);
+// cast sunlight to all bodies equally in this model
+const sunLight = new THREE.PointLight(0xffffff, SUN_BASE_INTENSITY, 0, 0);
 sunLight.position.set(0, 0, 0);
 sunLight.castShadow = true;
 sunLight.shadow.mapSize.width = 2048;
 sunLight.shadow.mapSize.height = 2048;
 sunLight.shadow.radius = 4;
 sunLight.shadow.bias = -0.0005;
+
+sunLight.decay = 0;
+sunLight.distance = 0;
 scene.add(sunLight);
 
 const flareSize = FLARE_BASE_SCALE;
