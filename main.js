@@ -1,5 +1,8 @@
 import * as THREE from '/node_modules/three';
 import { BODIES } from './data/bodies.js';
+import { EffectComposer } from '/node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from '/node_modules/three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from '/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 // ---------------------
 // CONSTANTS TO USE THROUGHOUT
@@ -15,8 +18,16 @@ const INIT_Z = 10;
 const ROTATION_SCALE = 77; // used to scale rotation period
 const ORBIT_SCALE = 25000; // used to scale orbital period
 
-const RADIUS_SCALE = 1e-4; // used to scale body radii
-const DISTANCE_SCALE = 1e-7; // used to scale orbital distances
+const RADIUS_SCALE = 2e-4; // used to scale body radii
+const DISTANCE_SCALE = 4e-7; // used to scale orbital distances
+
+// pulsing sun parameters
+const FLARE_BASE_SCALE = 18;
+const FLARE_BASE_OPACITY = 0.45;
+const FLARE_PULSE_FREQ = 0.25;
+const FLARE_PULSE_AMPL = 0.35;
+const SUN_BASE_INTENSITY = 1.6;
+const SUN_PULSE_AMPL = 0.25;
 
 // ---------------------
 // SHARED RESOURCES
@@ -34,15 +45,57 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
 camera.position.set(INIT_X, INIT_Y, INIT_Z);
 
-const renderer = new THREE.WebGLRenderer({
-	canvas: document.querySelector('#bg'),
-});
+const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg'), antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
+
+// enable soft shadows
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
 renderer.render(scene, camera);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
 scene.add(ambientLight);
+
+// sun light to cast shadows
+const sunLight = new THREE.PointLight(0xffffff, SUN_BASE_INTENSITY, 0, 2);
+sunLight.position.set(0, 0, 0);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.radius = 4;
+sunLight.shadow.bias = -0.0005;
+scene.add(sunLight);
+
+const flareSize = FLARE_BASE_SCALE;
+const flareCanvas = document.createElement('canvas');
+flareCanvas.width = flareCanvas.height = 256;
+const fctx = flareCanvas.getContext('2d');
+const g = fctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+g.addColorStop(0, 'rgba(255, 255, 255, 0)');
+g.addColorStop(0.35, 'rgba(255, 220, 180, 0.35)');
+g.addColorStop(0.65, 'rgba(255, 150, 80, 0.12)');
+g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+fctx.fillStyle = g;
+fctx.fillRect(0, 0, 256, 256);
+const flareTex = new THREE.CanvasTexture(flareCanvas);
+const flareMat = new THREE.SpriteMaterial({ map: flareTex, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true, opacity: FLARE_BASE_OPACITY });
+const flareSprite = new THREE.Sprite(flareMat);
+flareSprite.scale.set(flareSize, flareSize, 1);
+flareSprite.position.set(0, 0, 0);
+flareSprite.renderOrder = 0;
+flareSprite.material.depthTest = false;
+scene.add(flareSprite);
+
+// bloom
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0.85);
+bloomPass.threshold = 0.0;
+bloomPass.strength = 0.25;
+bloomPass.radius = 0.4;
+composer.addPass(bloomPass);
 
 // ---------------------
 // helper functions
@@ -86,7 +139,7 @@ function createOrbit(distance) {
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
 		transparent: true,
-		opacity: 0.25
+		opacity: 0.15
 	});
 	return new THREE.Mesh(orbitGeom, orbitMat);
 }
@@ -106,6 +159,18 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 	const bodyTexture = textureLoader.load(bodyPath);
 	const bodyMat = new THREE.MeshStandardMaterial({ map: bodyTexture });
 	const body = new THREE.Mesh(bodyGeom, bodyMat);
+
+	// planets cast and receive shadows, sun does not
+	if (bodyName === 'sun') {
+		// show the sun texture directly and ensure it renders above the flare
+		body.material = new THREE.MeshBasicMaterial({ map: bodyTexture });
+		body.renderOrder = 1;
+		body.castShadow = false;
+		body.receiveShadow = false;
+	} else {
+		body.castShadow = true;
+		body.receiveShadow = true;
+	}
 	const pivot = new THREE.Object3D();
 	pivot.add(body);
 	scene.add(pivot);
@@ -114,13 +179,14 @@ function createBody(bodyName, bodyRadius, distance, ringRadii) {
 	scene.add(orbit);
 	orbit.rotation.x += 0.5 * Math.PI;
 
-	// create ring if it exists
 	if (ringRadii) {
 		const ring = createRing(bodyName, ringRadii);
 
 		pivot.add(ring);
 		ring.position.set(distance, 0, 0);
 		ring.rotation.x = -0.5 * Math.PI;
+		ring.castShadow = false;
+		ring.receiveShadow = true;
 
 		return { body, ring, pivot, orbit };
 	}
@@ -149,9 +215,8 @@ for (let i = 0; i < STAR_COUNT; i++) addStar();
 const bodyObjects = new Map(); // id -> { body, pivot, ring?, orbit }
 
 for (const b of BODIES) {
-	// temporarily shrinking the sun
 	let scaledRadius = b.radiusKm * RADIUS_SCALE;
-	if (b.id === 'sun') scaledRadius *= 0.05;
+	if (b.id === 'sun') scaledRadius *= 0.02; // temporarily shrinking the sun more
 	const scaledDist = b.distKm * DISTANCE_SCALE;
 
 	const ringParam = {
@@ -183,8 +248,6 @@ function applyTiltAndInclination(body, tilt, inclination) {
 	}
 }
 
-// (tilts applied above during creation from data)
-
 // ---------------------
 // animation helpers (per-frame)
 // ---------------------
@@ -196,18 +259,18 @@ function applyTiltAndInclination(body, tilt, inclination) {
  */
 function advanceRotationAndOrbit(body, dayLength, yearLength) {
 
-	// orbitalPeriod: orbital period in radians/seconds
-	// rotationPeriod: rotation period in radians/seconds
-	var orbitalPeriod = TWO_PI / (yearLength * 86400);
+	// rotationPeriod converts dayLength to rad/sec
 	var rotationPeriod = TWO_PI / (dayLength * 86400);
-
-	// scale periods so they are observable in a reasonable time frame
-	orbitalPeriod *= ORBIT_SCALE;
 	rotationPeriod *= ROTATION_SCALE;
 
-	// implement angles accordingly
-	body.pivot.rotation.y += orbitalPeriod;
 	body.body.rotation.y += rotationPeriod;
+
+	// need this if statement because the Sun has no orbital motion in this model
+	if (yearLength != null) {
+		var orbitalPeriod = TWO_PI / (yearLength * 86400);
+		orbitalPeriod *= ORBIT_SCALE;
+		body.pivot.rotation.y += orbitalPeriod;
+	}
 
 }
 
@@ -222,6 +285,9 @@ function onWindowResize() {
 
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
+	if (typeof composer !== 'undefined') {
+		composer.setSize(window.innerWidth, window.innerHeight);
+	}
 }
 
 window.addEventListener('resize', onWindowResize);
@@ -251,19 +317,26 @@ function animate() {
 	for (const [id, obj] of bodyObjects.entries()) {
 		// find corresponding data entry
 		const data = BODIES.find(x => x.id === id);
-		if (!data) continue;
 
-	// rotation and orbital period are both in days
-	const dayLength = data.rotationDays;
-	const yearLength = data.orbitalDays;
+		// rotation and orbital period are both in days
+		const dayLength = data.rotationDays;
+		const yearLength = data.orbitalDays;
 
-	// skip bodies without an orbital period (e.g., the Sun)
-	if (yearLength == null) continue;
-
-	advanceRotationAndOrbit(obj, dayLength, yearLength);
+		// advance rotation for all bodies; orbital advance only when yearLength != null
+		advanceRotationAndOrbit(obj, dayLength, yearLength);
 	}
 
-	renderer.render(scene, camera);
+	// sun pulse
+	const t = performance.now() / 1000;
+	const p = 0.5 * (1 + Math.sin(2 * Math.PI * FLARE_PULSE_FREQ * t));
+
+	flareSprite.material.opacity = FLARE_BASE_OPACITY + (p - 0.5) * FLARE_PULSE_AMPL;
+	const s = FLARE_BASE_SCALE * (1 + (p - 0.5) * FLARE_PULSE_AMPL);
+	flareSprite.scale.set(s, s, 1);
+
+	sunLight.intensity = SUN_BASE_INTENSITY + (p - 0.5) * SUN_PULSE_AMPL;
+
+	composer.render();
 }
 
 animate();
