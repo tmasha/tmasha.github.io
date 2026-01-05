@@ -19,6 +19,7 @@ const END_X = 0;
 const END_Y = 300;
 const END_Z = 1500;
 const END_ROTATION_X = -0.35;
+const SCROLL_DISTANCE = 4000; // pixels of scroll to reach end of camera path
 
 // scale factors
 const ROTATION_SCALE = 77; // used to scale rotation period
@@ -313,8 +314,8 @@ window.addEventListener('resize', onWindowResize);
  */
 function moveCamera() {
 	const t = document.body.getBoundingClientRect().top;
-	// map scroll (t is negative when scrolling down) to a 0..1 progress over ~2000px
-	const progress = Math.min(1, Math.max(0, -t / 2000));
+	// map scroll (t is negative when scrolling down) to a 0..1 progress over SCROLL_DISTANCE
+	const progress = Math.min(1, Math.max(0, -t / SCROLL_DISTANCE));
 
 	// linear interpolation
 	const interpolate = (a, b, p) => a + (b - a) * p;

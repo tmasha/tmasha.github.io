@@ -23,7 +23,7 @@ main {
 
 :root {
   --dark-bg: rgba(0, 38, 121, 0.315);
-  --spacing: 350px;
+  --spacing: 500px;
 
   font-family: "Cutive Mono", monospace;
   font-weight: 400;
@@ -75,10 +75,13 @@ canvas {
 
 header {
   background: var(--dark-bg);
-  grid-column: 2 / span 5;
+  grid-column: 4 / span 5;
   font-size: 2.5rem;
-  padding: 2rem;
+  padding: 1rem;
   margin-bottom: var(--spacing);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 30vh;
 }
 
 .header-line {
@@ -94,14 +97,70 @@ header {
 }
 
 section {
-  grid-column: 2 / 8;
-  padding: 1rem;
-  background: var(--dark-bg);
+  grid-column: 3 / 11;
+  padding: 0;
+  background: transparent;
   font-size: 1.25rem;
   line-height: 1.5;
   margin-bottom: var(--spacing);
+  display: grid;
+  grid-template-columns: 2fr 5fr;
+  gap: 2rem;
+  align-items: start;
 }
 
+.section-header {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--dark-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  height: fit-content;
+}
+
+.section-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.section-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.section-content {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.contact-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  background: var(--dark-bg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.contact-content p {
+  margin: 0;
+}
+
+.card {
+  background: var(--dark-bg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: none;
+  width: 100%;
+}
 
 blockquote {
   margin: 0;
@@ -119,7 +178,7 @@ blockquote p {
 }
 
 .left {
-  grid-column: 6 / 12;
+  /* removed */
 }
 
 header h1 {
@@ -136,7 +195,14 @@ header #subtitle {
 }
 
 .experience-item {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+.experience-item:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .job-title {
@@ -172,6 +238,7 @@ header #subtitle {
   padding: 0;
   margin: 0;
   text-align: left;
+  font-size: 0.9rem;
 }
 
 .experience-bullets li {
@@ -185,14 +252,6 @@ header #subtitle {
   position: absolute;
   left: 0;
   color: #888;
-}
-
-.card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
 }
 
 .card-stack {
