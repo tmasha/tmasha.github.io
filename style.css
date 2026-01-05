@@ -81,6 +81,18 @@ header {
   margin-bottom: var(--spacing);
 }
 
+.header-line {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  margin: 0.75rem 0 1rem 0;
+}
+
+.section-line {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  margin: 0.5rem 0 1rem 0;
+}
+
 section {
   grid-column: 2 / 8;
   padding: 1rem;
@@ -89,6 +101,7 @@ section {
   line-height: 1.5;
   margin-bottom: var(--spacing);
 }
+
 
 blockquote {
   margin: 0;
@@ -123,7 +136,7 @@ header #subtitle {
 }
 
 .experience-item {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .job-title {
@@ -172,6 +185,42 @@ header #subtitle {
   position: absolute;
   left: 0;
   color: #888;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+}
+
+.card-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.edu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.edu-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 1570px) {
