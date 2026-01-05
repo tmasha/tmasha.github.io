@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cutive+Mono&family=Major+Mono+Display&display=swap');
+
 body::-webkit-scrollbar {
   height: 0.5em;
   display: none;
@@ -23,7 +25,7 @@ main {
   --dark-bg: rgba(0, 38, 121, 0.315);
   --spacing: 350px;
 
-  font-family: free, monospace;
+  font-family: "Cutive Mono", monospace;
   font-weight: 400;
   font-style: normal;
 }
@@ -41,12 +43,27 @@ main {
   grid-template-columns: repeat(12, 1fr);
 }
 
-h1,
-h2,
-h3,
-blockquote {
-  font-family: 'Raleway', sans-serif;
+h1, h2 {
+  font-family: 'Major Mono Display', monospace;
+  font-weight: 1000;
+  font-style: normal;
+}
+
+h3 {
+  font-family: 'Major Mono Display', monospace;
   font-weight: 700;
+  font-style: normal;
+}
+
+blockquote {
+  font-family: monospace;
+  font-weight: 700;
+  font-style: normal;
+}
+
+p {
+  font-family: "Cutive Mono", monospace;
+  font-weight: 400;
   font-style: normal;
 }
 
@@ -103,6 +120,58 @@ header #subtitle {
   margin: 0;
   font-size: 1rem;
   color: #ddd;
+}
+
+.experience-item {
+  margin-bottom: 2rem;
+}
+
+.job-title {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem 0;
+  font-weight: 700;
+}
+
+.job-location {
+  font-size: 1rem;
+  margin: 0.25rem 0;
+  color: #aaa;
+}
+
+.date-box {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin: 0.5rem 0;
+}
+
+.experience-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 1rem 0;
+}
+
+.experience-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.experience-bullets li {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.experience-bullets li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #888;
 }
 
 @media (max-width: 1570px) {
