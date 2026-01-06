@@ -33,7 +33,7 @@ const FLARE_BASE_SCALE = 18;
 const FLARE_BASE_OPACITY = 0.45;
 const FLARE_PULSE_FREQ = 0.25;
 const FLARE_PULSE_AMPL = 0.35;
-const SUN_BASE_INTENSITY = 1.6;
+const SUN_BASE_INTENSITY = 1.0;
 const SUN_PULSE_AMPL = 0.25;
 
 // ---------------------
@@ -64,7 +64,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 renderer.render(scene, camera);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
 scene.add(ambientLight);
 
 // cast sunlight to all bodies equally in this model
@@ -75,6 +75,8 @@ sunLight.shadow.mapSize.width = 2048;
 sunLight.shadow.mapSize.height = 2048;
 sunLight.shadow.radius = 4;
 sunLight.shadow.bias = -0.0005;
+sunLight.shadow.camera.near = 0.1;
+sunLight.shadow.camera.far = 10000;
 
 sunLight.decay = 0;
 sunLight.distance = 0;
@@ -105,8 +107,8 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0.85);
 bloomPass.threshold = 0.0;
-bloomPass.strength = 0.25;
-bloomPass.radius = 0.4;
+bloomPass.strength = 0.5;
+bloomPass.radius = 0.6;
 composer.addPass(bloomPass);
 
 // ---------------------
@@ -141,7 +143,7 @@ function createRing(bodyName, ringRadii) {
 	});
 	const mesh = new THREE.Mesh(ringGeom, ringMat);
 	mesh.receiveShadow = true;
-	mesh.castShadow = false;
+	mesh.castShadow = true;
 	return mesh;
 }
 
@@ -155,7 +157,7 @@ function createOrbit(distance) {
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
 		transparent: true,
-		opacity: 0.15
+		opacity: 0.07
 	});
 	return new THREE.Mesh(orbitGeom, orbitMat);
 }
