@@ -1,292 +1,367 @@
 import * as THREE from '/node_modules/three';
+import { BODIES } from './data/bodies.js';
+import { EffectComposer } from '/node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from '/node_modules/three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from '/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-// general setup
+// ---------------------
+// CONSTANTS TO USE THROUGHOUT
+// ---------------------
+const TWO_PI = Math.PI * 2;
+const DEG_TO_RAD = Math.PI / 180;
+
+const INIT_X = 0;
+const INIT_Y = 0;
+const INIT_Z = 10;
+
+// camera end positions for scroll
+const END_X = 0;
+const END_Y = 300;
+const END_Z = 1500;
+const END_ROTATION_X = -0.35;
+const SCROLL_DISTANCE = 6000; // pixels of scroll to reach end of camera path
+
+// scale factors
+const ROTATION_SCALE = 77; // used to scale rotation period
+const ORBIT_SCALE = 25000; // used to scale orbital period
+
+const RADIUS_SCALE = 2e-4; // used to scale body radii
+const DISTANCE_SCALE = 4e-7; // used to scale orbital distances
+
+// pulsing sun parameters
+const FLARE_BASE_SCALE = 18;
+const FLARE_BASE_OPACITY = 0.45;
+const FLARE_PULSE_FREQ = 0.25;
+const FLARE_PULSE_AMPL = 0.35;
+const SUN_BASE_INTENSITY = 1.0;
+const SUN_PULSE_AMPL = 0.25;
+
+// ---------------------
+// SHARED RESOURCES
+// ---------------------
+const textureLoader = new THREE.TextureLoader();
+const STAR_GEOM = new THREE.SphereGeometry(0.5, 24, 24);
+const STAR_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const STAR_COUNT = 300; // number of random stars generated
+
+// ---------------------
+// scene setup
+// ---------------------
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
-camera.position.set(-7, 0, 10);
+// ensure the camera far plane covers the outermost bodies
+const maxScaledDist = Math.max(...BODIES.map(b => b.distKm * DISTANCE_SCALE));
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, Math.max(1000, maxScaledDist * 2));
+camera.position.set(INIT_X, INIT_Y, INIT_Z);
 
-const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector('#bg'),
-});
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.render( scene, camera );
+const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg'), antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
 
-// lights
-const ambientLight = new THREE.AmbientLight( 0xffffff, 0.8 );
+// enable soft shadows
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+renderer.render(scene, camera);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
 scene.add(ambientLight);
 
+// cast sunlight to all bodies equally in this model
+const sunLight = new THREE.PointLight(0xffffff, SUN_BASE_INTENSITY, 0, 0);
+sunLight.position.set(0, 0, 0);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.radius = 4;
+sunLight.shadow.bias = -0.0005;
+sunLight.shadow.camera.near = 0.1;
+sunLight.shadow.camera.far = 10000;
 
+sunLight.decay = 0;
+sunLight.distance = 0;
+scene.add(sunLight);
 
+const flareSize = FLARE_BASE_SCALE;
+const flareCanvas = document.createElement('canvas');
+flareCanvas.width = flareCanvas.height = 256;
+const fctx = flareCanvas.getContext('2d');
+const g = fctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+g.addColorStop(0, 'rgba(255, 255, 255, 0)');
+g.addColorStop(0.35, 'rgba(255, 220, 180, 0.35)');
+g.addColorStop(0.65, 'rgba(255, 150, 80, 0.12)');
+g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+fctx.fillStyle = g;
+fctx.fillRect(0, 0, 256, 256);
+const flareTex = new THREE.CanvasTexture(flareCanvas);
+const flareMat = new THREE.SpriteMaterial({ map: flareTex, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true, opacity: FLARE_BASE_OPACITY });
+const flareSprite = new THREE.Sprite(flareMat);
+flareSprite.scale.set(flareSize, flareSize, 1);
+flareSprite.position.set(0, 0, 0);
+flareSprite.renderOrder = 0;
+flareSprite.material.depthTest = false;
+scene.add(flareSprite);
 
+// bloom
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0.85);
+bloomPass.threshold = 0.0;
+bloomPass.strength = 0.5;
+bloomPass.radius = 0.6;
+composer.addPass(bloomPass);
 
-
-// random stars background
-function addStar() {
-  const starGeom = new THREE.SphereGeometry(0.5, 24, 24);
-  const starMat = new THREE.MeshBasicMaterial( { color: 0xffffff });
-  const star = new THREE.Mesh(starGeom, starMat);
-
-  const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(633));
-  star.position.set(x, y, z);
-  scene.add(star);
+// ---------------------
+// helper functions
+// ---------------------
+function randSpread() {
+	return THREE.MathUtils.randFloatSpread(2000);
 }
 
-Array(300).fill().forEach(addStar);
-
-
-const meGeom = new THREE.BoxGeometry(5, 5, 5);
-
-const textureLoader = new THREE.TextureLoader();
-const meTexture = textureLoader.load('/assets/me.jpg');
-
-const meMat = new THREE.MeshStandardMaterial({ map: meTexture });
-
-const meMesh = new THREE.Mesh(meGeom, meMat);
-
-scene.add(meMesh);
-
-
-
-
-
-
-
-
-// solar system graphics
-// This function creates a celestial body
-// PARAMETERS;
-// bodyName: The name of the body as a lowercase String (for example: "earth")
-// bodyRadius: The radius of the body (for example: 20.0)
-// distance: The body's distance from the Sun (for example: 100.0)
-// ringRadii: A list containing the inner and outer ring radii (for example: {innerRadius: 10, outerRadius: 20})
-
+// ---------------------
+// factory functions
+// ---------------------
+/**
+ * create a ring for a celestial body
+ * @param {string} bodyName - body name as a lowercase string
+ * @param {Object} ringRadii - the inner and outer ring radii in km
+ * @returns {Object} the created ring mesh
+ */
 function createRing(bodyName, ringRadii) {
 	const ringGeom = new THREE.RingGeometry(
-		ringRadii.innerRadius, 
+		ringRadii.innerRadius,
 		ringRadii.outerRadius
 	);
-	
-	// Make a path name for the ring texture image file, then use that to make a ring texture
-	const ringPath = "assets/maps/" + bodyName + "Ring.png";
-	const ringTexture = new THREE.TextureLoader().load(ringPath);
 
-	// Use the ring geometry and ring material to make a ring mesh
-	const ringMat = new THREE.MeshBasicMaterial({
+	const ringPath = `assets/maps/${bodyName}Ring.jpg`;
+	const ringTexture = textureLoader.load(ringPath);
+
+	const ringMat = new THREE.MeshStandardMaterial({
 		map: ringTexture,
-		side: THREE.DoubleSide
+		side: THREE.DoubleSide,
+		transparent: true
 	});
-	return new THREE.Mesh(ringGeom, ringMat);
+	const mesh = new THREE.Mesh(ringGeom, ringMat);
+	mesh.receiveShadow = true;
+	mesh.castShadow = true;
+	return mesh;
 }
 
-// Create a representation for the object's orbit
-// distance: distance from the Sun
+/**
+ * create body orbit torus
+ * @param {number} distance - body distance from Sun in AU
+ * @returns {Object} the created orbit mesh
+ */
 function createOrbit(distance) {
-	// Create a representation for the body's orbit based on its distance
-	const orbitGeom = new THREE.TorusGeometry(distance * 0.7, 0.1);
+	const orbitGeom = new THREE.TorusGeometry(distance, 0.1);
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
 		transparent: true,
-		opacity: 0.25
+		opacity: 0.07
 	});
 	return new THREE.Mesh(orbitGeom, orbitMat);
 }
 
+/**
+ * create a celestial body
+ * @param {string} bodyName - body name as a lowercase string
+ * @param {number} bodyRadius - body radius in km
+ * @param {number} distance - body distance from Sun in AU
+ * @param {Object} ringRadii - the inner and outer ring radii in km
+ * @returns {Object} the created celestial body
+ */
 function createBody(bodyName, bodyRadius, distance, ringRadii) {
 
-	// Create the body's geometry using the body's Radius
 	const bodyGeom = new THREE.SphereGeometry(bodyRadius);
-
-	// Create a path name for the body texture image file, then use that to make a body texture
-	const bodyPath = "assets/maps/" + bodyName + ".png";
-	const bodyTexture = new THREE.TextureLoader().load(bodyPath);
-
-	// Use the body texture and body material to make a body mesh
-	const bodyMat = new THREE.MeshStandardMaterial({
-		map: bodyTexture,
-	});
-	
-	// Create a planet
+	const bodyPath = `assets/maps/${bodyName}.jpg`;
+	const bodyTexture = textureLoader.load(bodyPath);
+	const bodyMat = new THREE.MeshStandardMaterial({ map: bodyTexture });
 	const body = new THREE.Mesh(bodyGeom, bodyMat);
 
-	// Create a pivot to control the planet's orbit around the Sun, then add the body to the pivot
+	// planets cast and receive shadows, sun does not
+	if (bodyName === 'sun') {
+		// show the sun texture directly and ensure it renders above the flare
+		body.material = new THREE.MeshBasicMaterial({ map: bodyTexture });
+		body.renderOrder = 1;
+		body.castShadow = false;
+		body.receiveShadow = false;
+	} else {
+		body.castShadow = true;
+		body.receiveShadow = true;
+	}
 	const pivot = new THREE.Object3D();
 	pivot.add(body);
-
-	// Add the pivot and set the body's distance from the Sun
 	scene.add(pivot);
-	body.position.set(distance * 0.7, 0, 0);
-
-	// Create a representation for the body's orbit based on its distance
+	body.position.set(distance, 0, 0);
 	const orbit = createOrbit(distance);
 	scene.add(orbit);
 	orbit.rotation.x += 0.5 * Math.PI;
 
-	// This if statement is run if the ring's inner and outer radii are passed in a list
+	// attach ring to the planet mesh so it inherits the planet's spin
 	if (ringRadii) {
-		
 		const ring = createRing(bodyName, ringRadii);
-
-		// Add the ring to the pivot and set its distance from the Sun
-		pivot.add(ring);
-		ring.position.set(distance * 0.7, 0, 0);
+		// add ring as a child of the body so it rotates with the body's spin
+		body.add(ring);
+		ring.position.set(0, 0, 0);
 		ring.rotation.x = -0.5 * Math.PI;
 
-		// Return body, ring, pivot so they can be accessed later
-		return {body, ring, pivot, orbit}
-
+		return { body, ring, pivot, orbit };
 	}
 
-	// If ring is not rendered, just return a body and pivot
-	return {body, pivot, orbit}
+	// no ring for this body
+	return { body, pivot, orbit };
 }
 
-// set the orbital period and rotation period
-// PARAMETERS
-// body: the body we want to modify (example: earth)
-// yearLength: the year length in Earth days (i.e. 365)
-// dayLength: the day length in Earth days (i.e. 1)
-function setPeriods(body, dayLength, yearLength) {
-	
-	// orbitalPeriod: orbital period in radians/seconds
-	// rotationPeriod: rotation period in radians/seconds
-	var orbitalPeriod = (Math.PI * 2) / (yearLength * 86400);
-	var rotationPeriod = (Math.PI * 2) / (dayLength * 86400);
-
-	// Scale it so it doesn't take a gorillion years for anything to happen lmfao
-	const rscale = 77;
-  const oscale = 25000;
-	orbitalPeriod *= oscale;
-	rotationPeriod *= rscale;
-
-	// implement each accordingly
-	body.pivot.rotation.y += orbitalPeriod;
-	body.body.rotation.y += rotationPeriod;
-
+// ---------------------
+// scene population
+// ---------------------
+/**
+ * Add a star at a random position in the scene
+ */
+function addStar() {
+	// reuse geometry and material for many stars to save memory
+	const star = new THREE.Mesh(STAR_GEOM, STAR_MAT);
+	const [x, y, z] = [randSpread(), randSpread(), randSpread()];
+	star.position.set(x, y, z);
+	scene.add(star);
 }
 
-// set the axial tilt and orbital inclination
-// PARAMETERS
-// body: the body we want to modify (example: earth)
-// tilt: the axial tilt in degrees (i.e. 23.44)
-// inclination: the orbital inclination to the ecliptic in degrees (i.e. 7.155)
-function setTilts(body, tilt, inclination) {
-	// convert to radians
-	tilt *= Math.PI / 180;
-	inclination *= Math.PI / 180;
+for (let i = 0; i < STAR_COUNT; i++) addStar();
 
-	// set each accordingly
+// create bodies from data file
+const bodyObjects = new Map(); // id -> { body, pivot, ring?, orbit }
+
+for (const b of BODIES) {
+	let scaledRadius = b.radiusKm * RADIUS_SCALE;
+	if (b.id === 'sun') scaledRadius *= 0.02; // temporarily shrinking the sun more
+	const scaledDist = b.distKm * DISTANCE_SCALE;
+
+	const ringParam = (b.ringOuterKm > b.ringInnerKm) ? {
+		innerRadius: b.ringInnerKm * RADIUS_SCALE,
+		outerRadius: b.ringOuterKm * RADIUS_SCALE,
+	} : null;
+
+	const created = createBody(b.id, scaledRadius, scaledDist, ringParam);
+	bodyObjects.set(b.id, created);
+
+	// apply axial tilt and inclination immediately
+	applyTiltAndInclination(created, b.axialTiltDeg, b.inclinationDeg);
+
+	// randomize initial planet rotational and orbital positions
+	const randomPhase = Math.random() * TWO_PI;
+	created.pivot.rotation.y = randomPhase;
+	created.body.rotation.y += Math.random() * TWO_PI;
+}
+
+/**
+ * apply axial tilt and orbital inclination to a body
+ * @param {Object} body - the celestial body object
+ * @param {number} tilt - the axial tilt in degrees
+ * @param {number} inclination - the orbital inclination to the ecliptic in degrees
+ */
+function applyTiltAndInclination(body, tilt, inclination) {
+	tilt *= DEG_TO_RAD;
+	inclination *= DEG_TO_RAD;
 	body.body.rotation.x += tilt;
 	body.pivot.rotation.x += inclination;
 	body.orbit.rotation.x += inclination;
-
-  if (body.ring) {
-		
-		body.ring.rotation.x += tilt;
-
-	}
-  
 }
 
-// Main planets
-const mercury = createBody("mercury", 1, 25);
-setTilts(mercury, 2.04, 7);
+// ---------------------
+// animation helpers (per-frame)
+// ---------------------
+/**
+ * advance the body's spin and orbital angle for animation (per-frame)
+ * @param {Object} body - the celestial body object
+ * @param {number} dayLength - body day length in Earth days
+ * @param {number} yearLength - body year length in Earth days
+ */
+function advanceRotationAndOrbit(body, dayLength, yearLength) {
 
-const venus = createBody("venus", 3, 50);
-setTilts(venus, 2.64, 3.39);
+	// rotationPeriod converts dayLength to rad/sec
+	var rotationPeriod = TWO_PI / (dayLength * 86400);
+	rotationPeriod *= ROTATION_SCALE;
 
-const earth = createBody("earth", 3, 75);
-setTilts(earth, 23.439, 0);
+	body.body.rotation.y += rotationPeriod;
 
-const mars = createBody("mars", 1.5, 100);
-setTilts(mars, 25.19, 1.85);
+	// need this if statement because the Sun has no orbital motion in this model
+	if (yearLength != null) {
+		var orbitalPeriod = TWO_PI / (yearLength * 86400);
+		orbitalPeriod *= ORBIT_SCALE;
+		body.pivot.rotation.y += orbitalPeriod;
+	}
 
-const jupiter = createBody("jupiter", 10, 200);
-setTilts(jupiter, 3.13, 1.3);
+}
 
-const saturn = createBody("saturn", 9, 300, {innerRadius: 10, outerRadius: 20});
-setTilts(saturn, 26.73, 2.49);
+// ---------------------
+// event handlers
+// ---------------------
+/**
+ * handle window resize events
+ */
+function onWindowResize() {
+	renderer.setSize(window.innerWidth, window.innerHeight);
 
-const uranus = createBody("uranus", 6, 400);
-setTilts(uranus, 97.77, 0.77);
-
-const neptune = createBody("neptune", 6, 500);
-setTilts(neptune, 28, 1.77);
-
-const pluto = createBody("pluto", 1, 550);
-setTilts(pluto, 120, 17.2);
-
-
-
-
-
-// resize
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	if (typeof composer !== 'undefined') {
+		composer.setSize(window.innerWidth, window.innerHeight);
+	}
+}
 
 window.addEventListener('resize', onWindowResize);
 
-function onWindowResize() {
-  renderer.setSize(window.innerWidth, window.innerHeight);
-
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-}
-
-onWindowResize();
-
-// camera motion
-
+/**
+ * move the camera based on scroll position
+ */
 function moveCamera() {
-  const t = document.body.getBoundingClientRect().top;
-  camera.position.x = (t * 0.0004) - 7;
-  camera.rotation.x = (t * 0.0001);
-  camera.position.y = t * -0.02
-  camera.position.z = 10 + (t * -0.08)
+	const t = document.body.getBoundingClientRect().top;
+	// map scroll (t is negative when scrolling down) to a 0..1 progress over SCROLL_DISTANCE
+	const progress = Math.min(1, Math.max(0, -t / SCROLL_DISTANCE));
+
+	// linear interpolation
+	const interpolate = (a, b, p) => a + (b - a) * p;
+
+	camera.position.x = interpolate(INIT_X, END_X, progress);
+	camera.position.y = interpolate(INIT_Y, END_Y, progress);
+	camera.position.z = interpolate(INIT_Z, END_Z, progress);
+	camera.rotation.x = interpolate(0, END_ROTATION_X, progress);
 }
 
 document.body.onscroll = moveCamera;
 
-// animate
+onWindowResize();
 
+// ---------------------
+// main animation loop
+// ---------------------
 function animate() {
-  requestAnimationFrame( animate );
+	requestAnimationFrame(animate);
 
-  meMesh.rotation.x += 0.001;
-  meMesh.rotation.z -= 0.005;
-  meMesh.rotation.y += 0.0025;
-  
+	// advance rotation and orbit for all created bodies
+	for (const [id, obj] of bodyObjects.entries()) {
+		// find corresponding data entry
+		const data = BODIES.find(x => x.id === id);
 
-  // setPeriods(planet, dayLength, yearLength)
+		// rotation and orbital period are both in days
+		const dayLength = data.rotationDays;
+		const yearLength = data.orbitalDays;
 
-	// Mercury
-	setPeriods(mercury, 59, 120)
+		// advance rotation for all bodies; orbital advance only when yearLength != null
+		advanceRotationAndOrbit(obj, dayLength, yearLength);
+	}
 
-	// Venus
-	setPeriods(venus, -243, 224.7)
+	// sun pulse
+	const t = performance.now() / 1000;
+	const p = 0.5 * (1 + Math.sin(2 * Math.PI * FLARE_PULSE_FREQ * t));
 
-	// Earth
-	setPeriods(earth, 1, 365.256);
+	flareSprite.material.opacity = FLARE_BASE_OPACITY + (p - 0.5) * FLARE_PULSE_AMPL;
+	const s = FLARE_BASE_SCALE * (1 + (p - 0.5) * FLARE_PULSE_AMPL);
+	flareSprite.scale.set(s, s, 1);
 
-	// Mars
-	setPeriods(mars, 1.02749125, 686.980);
+	sunLight.intensity = SUN_BASE_INTENSITY + (p - 0.5) * SUN_PULSE_AMPL;
 
-	// Jupiter
-	setPeriods(jupiter, 0.42, 1200);
-
-	// Saturn
-	setPeriods(saturn, 0.46, 1400);
-
-	// Uranus
-	setPeriods(uranus, 0.71, 2000);
-
-	// Neptune
-	setPeriods(neptune, 0.67, 4000);
-
-	setPeriods(pluto, 6, 5000);
-
-
-
-  renderer.render(scene, camera);
+	composer.render();
 }
 
-animate()
+animate();
