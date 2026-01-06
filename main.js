@@ -19,7 +19,7 @@ const END_X = 0;
 const END_Y = 300;
 const END_Z = 1500;
 const END_ROTATION_X = -0.35;
-const SCROLL_DISTANCE = 4000; // pixels of scroll to reach end of camera path
+const SCROLL_DISTANCE = 6000; // pixels of scroll to reach end of camera path
 
 // scale factors
 const ROTATION_SCALE = 77; // used to scale rotation period
