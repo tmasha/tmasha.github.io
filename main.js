@@ -40,7 +40,7 @@ const SUN_PULSE_AMPL = 0.25;
 // SHARED RESOURCES
 // ---------------------
 const textureLoader = new THREE.TextureLoader();
-const STAR_GEOM = new THREE.SphereGeometry(0.5, 24, 24);
+const STAR_GEOM = new THREE.SphereGeometry(0.5, 8, 6);
 const STAR_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const STAR_COUNT = 300; // number of random stars generated
 
@@ -157,7 +157,7 @@ function createOrbit(distance) {
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
 		transparent: true,
-		opacity: 0.07
+		opacity: 0
 	});
 	return new THREE.Mesh(orbitGeom, orbitMat);
 }
@@ -242,6 +242,8 @@ for (const b of BODIES) {
 	} : null;
 
 	const created = createBody(b.id, scaledRadius, scaledDist, ringParam);
+	// cache the body data with the created object to avoid lookup in animate loop
+	created.data = b;
 	bodyObjects.set(b.id, created);
 
 	// apply axial tilt and inclination immediately
@@ -279,15 +281,13 @@ function applyTiltAndInclination(body, tilt, inclination) {
 function advanceRotationAndOrbit(body, dayLength, yearLength) {
 
 	// rotationPeriod converts dayLength to rad/sec
-	var rotationPeriod = TWO_PI / (dayLength * 86400);
-	rotationPeriod *= ROTATION_SCALE;
+	const rotationPeriod = (TWO_PI / (dayLength * 86400)) * ROTATION_SCALE;
 
 	body.body.rotation.y += rotationPeriod;
 
 	// need this if statement because the Sun has no orbital motion in this model
 	if (yearLength != null) {
-		var orbitalPeriod = TWO_PI / (yearLength * 86400);
-		orbitalPeriod *= ORBIT_SCALE;
+		const orbitalPeriod = (TWO_PI / (yearLength * 86400)) * ORBIT_SCALE;
 		body.pivot.rotation.y += orbitalPeriod;
 	}
 
@@ -304,12 +304,13 @@ function onWindowResize() {
 
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
-	if (typeof composer !== 'undefined') {
-		composer.setSize(window.innerWidth, window.innerHeight);
-	}
+	composer.setSize(window.innerWidth, window.innerHeight);
 }
 
 window.addEventListener('resize', onWindowResize);
+
+// linear interpolation helper
+const interpolate = (a, b, p) => a + (b - a) * p;
 
 /**
  * move the camera based on scroll position
@@ -319,9 +320,6 @@ function moveCamera() {
 	// map scroll (t is negative when scrolling down) to a 0..1 progress over SCROLL_DISTANCE
 	const progress = Math.min(1, Math.max(0, -t / SCROLL_DISTANCE));
 
-	// linear interpolation
-	const interpolate = (a, b, p) => a + (b - a) * p;
-
 	camera.position.x = interpolate(INIT_X, END_X, progress);
 	camera.position.y = interpolate(INIT_Y, END_Y, progress);
 	camera.position.z = interpolate(INIT_Z, END_Z, progress);
@@ -329,6 +327,14 @@ function moveCamera() {
 }
 
 document.body.onscroll = moveCamera;
+
+// cleanup on unload
+window.addEventListener('beforeunload', () => {
+	renderer.dispose();
+	composer.dispose();
+	STAR_GEOM.dispose();
+	STAR_MAT.dispose();
+});
 
 onWindowResize();
 
@@ -339,9 +345,9 @@ function animate() {
 	requestAnimationFrame(animate);
 
 	// advance rotation and orbit for all created bodies
-	for (const [id, obj] of bodyObjects.entries()) {
-		// find corresponding data entry
-		const data = BODIES.find(x => x.id === id);
+	for (const obj of bodyObjects.values()) {
+		// use cached data reference instead of searching BODIES array
+		const data = obj.data;
 
 		// rotation and orbital period are both in days
 		const dayLength = data.rotationDays;
