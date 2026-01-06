@@ -109,6 +109,10 @@ section {
   align-items: start;
 }
 
+section:last-of-type {
+  margin-bottom: 30vh;
+}
+
 .section-header {
   grid-column: 1;
   display: flex;
@@ -151,6 +155,7 @@ section {
 
 .contact-content p {
   margin: 0;
+  font-size: 0.9rem;
 }
 
 .card {
