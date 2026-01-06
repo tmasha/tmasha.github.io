@@ -157,7 +157,7 @@ function createOrbit(distance) {
 	const orbitMat = new THREE.MeshBasicMaterial({
 		color: 0xffffff,
 		transparent: true,
-		opacity: 0
+		opacity: 0.1
 	});
 	return new THREE.Mesh(orbitGeom, orbitMat);
 }

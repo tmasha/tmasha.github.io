@@ -75,6 +75,11 @@ p {
   font-style: normal;
 }
 
+b {
+  font-weight: 650;
+  font-size: inherit;
+}
+
 canvas {
   position: fixed;
   top: 0;
@@ -83,8 +88,8 @@ canvas {
 
 header {
   background: var(--dark-bg);
-  grid-column: 4 / span 6;
-  font-size: 2.5rem;
+  grid-column: 3 / span 8;
+  font-size: 3rem;
   padding: 1rem;
   margin-bottom: var(--spacing);
   border-radius: 8px;
@@ -104,10 +109,10 @@ header {
 }
 
 section {
-  grid-column: 3 / 11;
+  grid-column: 2 / 12;
   padding: 0;
   background: transparent;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   line-height: 1.5;
   margin-bottom: var(--spacing);
   display: grid;
@@ -132,12 +137,12 @@ section:last-of-type {
 
 .section-header h2 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
+  font-size: 1.875rem;
 }
 
 .section-header p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   color: #aaa;
 }
 
@@ -160,7 +165,7 @@ section:last-of-type {
 
 .contact-content p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .card {
@@ -174,14 +179,14 @@ section:last-of-type {
 blockquote {
   margin: 0;
   padding: 0;
-  grid-column: 2 / span 9;
+  grid-column: 1 / span 12;
   margin-bottom: var(--spacing);
 }
 
 blockquote p {
   color: black;
   background-color: white;
-  font-size: 4rem;
+  font-size: 5rem;
   display: inline;
   line-height: 1;
 }
@@ -192,14 +197,14 @@ blockquote p {
 
 header h1 {
   margin: 0 0 0.25rem 0;
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 700;
   color: white;
 }
 
 header #subtitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.25rem;
   color: #ddd;
 }
 
@@ -214,13 +219,13 @@ header #subtitle {
 }
 
 .job-title {
-  font-size: 1.5rem;
+  font-size: 1.875rem;
   margin: 0 0 0.25rem 0;
   font-weight: 700;
 }
 
 .job-location {
-  font-size: 1rem;
+  font-size: 1.25rem;
   margin: 0.25rem 0;
   color: #aaa;
 }
@@ -231,7 +236,7 @@ header #subtitle {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   margin: 0.5rem 0;
 }
 
@@ -246,7 +251,7 @@ header #subtitle {
   padding: 0;
   margin: 0;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .experience-bullets li {
@@ -263,7 +268,7 @@ header #subtitle {
 }
 
 .card p {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .card-stack {
@@ -290,14 +295,14 @@ header #subtitle {
   padding: 0.25rem 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: 1rem;
   background: rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 1570px) {
   header h1 {
     overflow: visible;
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
 }
 
@@ -312,7 +317,7 @@ header #subtitle {
   }
 
   header {
-    font-size: 1.5rem;
+    font-size: 1.875rem;
     padding: 1rem;
     text-align: center;
     width: 90%;
@@ -353,6 +358,6 @@ header #subtitle {
   }
 
   blockquote p {
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
 }
