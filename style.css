@@ -305,7 +305,7 @@ header #subtitle {
     width: 90%;
     max-width: 500px;
     grid-column: auto;
-    margin-top: 10vh;
+    margin-top: 30vh;
   }
 
   section {
@@ -314,7 +314,11 @@ header #subtitle {
     grid-column: auto;
     display: flex;
     flex-direction: column;
-    margin-bottom: 300px;
+    margin-bottom: 500px;
+  }
+
+  section:last-of-type {
+    margin-bottom: 400px;
   }
 
   .section-header {
