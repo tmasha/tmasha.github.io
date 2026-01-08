@@ -319,7 +319,7 @@ header #subtitle {
   header {
     font-size: 1.875rem;
     padding: 1rem;
-    text-align: center;
+    text-align: left;
     width: 90%;
     max-width: 500px;
     grid-column: auto;
