@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cutive+Mono&family=Major+Mono+Display&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap');
 
 * {
   box-sizing: border-box;
@@ -30,7 +30,9 @@ main {
 }
 
 :root {
-  --dark-bg: rgba(0, 38, 121, 0.6);
+  --dark-bg: rgba(20, 20, 22, 0.42);
+  --panel-border: rgba(255, 255, 255, 0.14);
+  --muted-text: #b8b8b8;
   --spacing: 500px;
 
   font-family: "Cutive Mono", monospace;
@@ -89,11 +91,15 @@ canvas {
 
 header {
   background: var(--dark-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   grid-column: 3 / span 8;
   font-size: 3rem;
   padding: 1rem;
   margin-bottom: var(--spacing);
-  border-radius: 8px;
+  border-radius: 12px;
   margin-top: 30vh;
 }
 
@@ -131,8 +137,12 @@ section:last-of-type {
   display: flex;
   flex-direction: column;
   background: var(--dark-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 12px;
   height: fit-content;
 }
 
@@ -144,7 +154,7 @@ section:last-of-type {
 .section-header p {
   margin: 0;
   font-size: 1.1rem;
-  color: #aaa;
+  color: var(--muted-text);
 }
 
 .section-content {
@@ -160,8 +170,12 @@ section:last-of-type {
   gap: 0.5rem;
   flex: 1;
   background: var(--dark-bg);
-  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
   padding: 1rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .contact-content p {
@@ -169,12 +183,42 @@ section:last-of-type {
   font-size: 1.1rem;
 }
 
+.contact-content a {
+  color: inherit;
+  text-decoration-color: rgba(255, 255, 255, 0.45);
+  text-underline-offset: 0.2em;
+  overflow-wrap: anywhere;
+}
+
+.contact-content a:hover {
+  text-decoration-color: white;
+}
+
+.contact-content a:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
 .card {
   background: var(--dark-bg);
-  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
   padding: 1rem;
-  box-shadow: none;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   width: 100%;
+}
+
+@media (hover: hover) {
+  .card {
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .card:hover {
+    background-color: rgba(32, 32, 34, 0.52);
+    border-color: rgba(255, 255, 255, 0.24);
+  }
 }
 
 blockquote {
@@ -228,7 +272,7 @@ header #subtitle {
 .job-location {
   font-size: 1.25rem;
   margin: 0.25rem 0;
-  color: #aaa;
+  color: var(--muted-text);
 }
 
 .date-box {
